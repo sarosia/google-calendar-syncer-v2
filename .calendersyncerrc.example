@@ -1,6 +1,7 @@
 {
   "port": 3001,
   "syncFrequency": "15m",
+  "logDir": "~/.calendersyncer/logs",
   "defaultFilter": {
     "excludeCancelled": true,
     "futureWindow": "365d",
