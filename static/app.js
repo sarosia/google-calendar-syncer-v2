@@ -305,6 +305,18 @@ async function loadCurrentUser() {
   }
 }
 
+let allCalendars = [];
+
+function escapeHtml(str) {
+  if (!str) return '';
+  return String(str)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#039;');
+}
+
 async function loadEvents() {
   try {
     const [eventsRes, sourcesRes] = await Promise.all([
@@ -324,6 +336,11 @@ async function loadEvents() {
     const json = await eventsRes.json();
     allEvents = json;
     applyFilter();
+
+    const eventsBadge = e('badge-events-count');
+    if (eventsBadge) {
+      eventsBadge.textContent = allEvents.length;
+    }
 
     if (sourcesRes.ok) {
       const sources = await sourcesRes.json();
@@ -350,6 +367,324 @@ async function loadEvents() {
   }
 }
 
+async function loadCalendars() {
+  try {
+    const res = await fetch('/calendars');
+    if (res.status === 401) {
+      window.location.href = '/login';
+      return;
+    }
+    if (!res.ok) {
+      throw new Error(`HTTP ${res.status}`);
+    }
+    allCalendars = await res.json();
+    renderCalendars(allCalendars);
+  } catch (err) {
+    console.error('Failed to load calendars:', err);
+    const container = e('calendars-list');
+    if (container) {
+      container.innerHTML = `
+        <tr>
+          <td colspan="6" class="uk-text-center uk-text-danger uk-padding">
+            Failed to load calendars: ${escapeHtml(err.message)}
+          </td>
+        </tr>
+      `;
+    }
+  }
+}
+
+function renderCalendars(calendars) {
+  const container = e('calendars-list');
+  if (!container) return;
+
+  const calBadge = e('badge-calendars-count');
+  if (calBadge) {
+    calBadge.textContent = (calendars || []).length;
+  }
+
+  if (!calendars || calendars.length === 0) {
+    container.innerHTML = `
+      <tr>
+        <td colspan="6" class="uk-text-center uk-text-muted uk-padding">
+          No calendar subscriptions configured yet. Click <strong>"+ Add Calendar"</strong> to subscribe to your first feed.
+        </td>
+      </tr>
+    `;
+    return;
+  }
+
+  container.innerHTML = '';
+  for (const cal of calendars) {
+    const tr = document.createElement('tr');
+
+    // 1. Calendar Name & Strategy
+    const nameTd = document.createElement('td');
+    const stratLabel =
+      cal.idStrategy === 'time_summary'
+        ? 'Time + Summary UID'
+        : 'Standard UID';
+    nameTd.innerHTML = `
+      <div class="cal-name-text">${escapeHtml(cal.name)}</div>
+      <div class="uk-margin-xsmall-top">
+        <span class="uk-badge" style="background: #f1f5f9; color: #475569; font-size: 0.7rem; font-weight: 500;">
+          ${stratLabel}
+        </span>
+      </div>
+    `;
+    tr.appendChild(nameTd);
+
+    // 2. Feed URL
+    const urlTd = document.createElement('td');
+    const safeUrl = escapeHtml(cal.url);
+    const shortUrl = safeUrl.length > 38 ? safeUrl.slice(0, 35) + '...' : safeUrl;
+    urlTd.innerHTML = `
+      <span class="cal-url-code" title="${safeUrl}">${shortUrl}</span>
+      <a href="${safeUrl}" target="_blank" rel="noopener noreferrer" class="uk-icon-link uk-margin-small-left" uk-icon="icon: link; ratio: 0.8" title="Open / test feed URL"></a>
+    `;
+    tr.appendChild(urlTd);
+
+    // 3. Target Google Calendar
+    const gcalTd = document.createElement('td');
+    if (cal.targetCalendarId) {
+      gcalTd.innerHTML = `
+        <span class="debug-chip debug-chip-gcal" title="${escapeHtml(cal.targetCalendarId)}">
+          <span uk-icon="icon: google; ratio: 0.7" class="uk-margin-xsmall-right"></span>
+          ${escapeHtml(cal.targetCalendarId.slice(0, 16))}…
+        </span>
+      `;
+    } else {
+      gcalTd.innerHTML = `<span class="uk-text-muted uk-text-small">Local only</span>`;
+    }
+    tr.appendChild(gcalTd);
+
+    // 4. Active Filters
+    const filterTd = document.createElement('td');
+    const filter = cal.filter || {};
+    const pills = [];
+    if (filter.pastWindow || filter.futureWindow) {
+      pills.push(
+        `<span class="filter-pill filter-pill-window">${filter.pastWindow || '7d'} .. ${filter.futureWindow || '90d'}</span>`
+      );
+    }
+    if (filter.excludeCancelled !== false) {
+      pills.push(`<span class="filter-pill">No cancelled</span>`);
+    }
+    if (filter.excludeSummaries && filter.excludeSummaries.length > 0) {
+      pills.push(
+        `<span class="filter-pill filter-pill-exclude">${filter.excludeSummaries.length} excluded</span>`
+      );
+    }
+    if (filter.includeSummaries && filter.includeSummaries.length > 0) {
+      pills.push(
+        `<span class="filter-pill filter-pill-include">${filter.includeSummaries.length} included</span>`
+      );
+    }
+    filterTd.innerHTML = pills.length
+      ? pills.join(' ')
+      : `<span class="uk-text-muted uk-text-small">Default filters</span>`;
+    tr.appendChild(filterTd);
+
+    // 5. Events count
+    const countTd = document.createElement('td');
+    countTd.className = 'uk-text-center';
+    countTd.innerHTML = `<span class="uk-badge" style="background: #e2e8f0; color: #1e293b;">${cal.eventsCount || 0}</span>`;
+    tr.appendChild(countTd);
+
+    // 6. Actions (Edit & Delete)
+    const actionsTd = document.createElement('td');
+    actionsTd.className = 'uk-text-right uk-text-nowrap';
+
+    const editBtn = document.createElement('button');
+    editBtn.className =
+      'uk-button uk-button-default uk-button-small uk-margin-small-right';
+    editBtn.style.padding = '0 8px';
+    editBtn.innerHTML =
+      '<span uk-icon="icon: file-edit; ratio: 0.8"></span> Edit';
+    editBtn.title = 'Edit calendar & filters';
+    editBtn.onclick = () => openEditCalendarModal(cal);
+
+    const deleteBtn = document.createElement('button');
+    deleteBtn.className = 'uk-button uk-button-danger uk-button-small';
+    deleteBtn.style.padding = '0 8px';
+    deleteBtn.innerHTML = '<span uk-icon="icon: trash; ratio: 0.8"></span>';
+    deleteBtn.title = 'Remove calendar subscription';
+    deleteBtn.onclick = () => deleteCalendar(cal.id, cal.name);
+
+    actionsTd.appendChild(editBtn);
+    actionsTd.appendChild(deleteBtn);
+    tr.appendChild(actionsTd);
+
+    container.appendChild(tr);
+  }
+}
+
+function openAddCalendarModal() {
+  e('calendar-id').value = '';
+  e('modal-calendar-title').textContent = 'Subscribe to Calendar';
+  e('cal-name').value = '';
+  e('cal-url').value = '';
+  e('cal-target-id').value = '';
+  e('cal-id-strategy').value = 'default';
+  e('cal-past-window').value = '60d';
+  e('cal-future-window').value = '365d';
+  e('cal-exclude-cancelled').checked = true;
+  e('cal-exclude-summaries').value = '';
+  e('cal-include-summaries').value = '';
+
+  if (window.UIkit && window.UIkit.modal) {
+    UIkit.modal('#modal-calendar').show();
+  }
+}
+
+function openEditCalendarModal(cal) {
+  e('calendar-id').value = cal.id;
+  e('modal-calendar-title').textContent = `Edit Subscription: ${cal.name}`;
+  e('cal-name').value = cal.name || '';
+  e('cal-url').value = cal.url || '';
+  e('cal-target-id').value = cal.targetCalendarId || '';
+  e('cal-id-strategy').value = cal.idStrategy || 'default';
+
+  const filter = cal.filter || {};
+  e('cal-past-window').value = filter.pastWindow || '';
+  e('cal-future-window').value = filter.futureWindow || '';
+  e('cal-exclude-cancelled').checked = filter.excludeCancelled !== false;
+  e('cal-exclude-summaries').value = (filter.excludeSummaries || []).join('\n');
+  e('cal-include-summaries').value = (filter.includeSummaries || []).join('\n');
+
+  if (window.UIkit && window.UIkit.modal) {
+    UIkit.modal('#modal-calendar').show();
+  }
+}
+
+async function submitCalendarForm(evt) {
+  evt.preventDefault();
+  const id = e('calendar-id').value;
+  const name = e('cal-name').value.trim();
+  const url = e('cal-url').value.trim();
+  const targetCalendarId = e('cal-target-id').value.trim();
+  const idStrategy = e('cal-id-strategy').value;
+
+  const pastWindow = e('cal-past-window').value.trim();
+  const futureWindow = e('cal-future-window').value.trim();
+  const excludeCancelled = e('cal-exclude-cancelled').checked;
+  const excludeSummaries = e('cal-exclude-summaries')
+    .value.split('\n')
+    .map((s) => s.trim())
+    .filter(Boolean);
+  const includeSummaries = e('cal-include-summaries')
+    .value.split('\n')
+    .map((s) => s.trim())
+    .filter(Boolean);
+
+  const saveBtn = e('btn-save-calendar');
+  if (saveBtn) saveBtn.disabled = true;
+
+  const payload = {
+    name,
+    url,
+    targetCalendarId,
+    idStrategy,
+    filter: {
+      pastWindow: pastWindow || undefined,
+      futureWindow: futureWindow || undefined,
+      excludeCancelled,
+      excludeSummaries,
+      includeSummaries,
+    },
+  };
+
+  try {
+    const endpoint = id
+      ? `/calendars/${encodeURIComponent(id)}`
+      : '/calendars';
+    const method = id ? 'PUT' : 'POST';
+    const res = await fetch(endpoint, {
+      method,
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload),
+    });
+
+    if (!res.ok) {
+      const errJson = await res.json().catch(() => ({}));
+      throw new Error(errJson.error || `HTTP ${res.status}`);
+    }
+
+    if (window.UIkit && window.UIkit.modal) {
+      UIkit.modal('#modal-calendar').hide();
+    }
+    if (window.UIkit && window.UIkit.notification) {
+      UIkit.notification({
+        message: id
+          ? 'Calendar updated in NotableDB!'
+          : 'Calendar subscribed and saved in NotableDB!',
+        status: 'success',
+        pos: 'top-center',
+        timeout: 3000,
+      });
+    }
+
+    await Promise.all([loadCalendars(), loadEvents()]);
+  } catch (err) {
+    console.error('Failed to save calendar:', err);
+    alert(`Error saving calendar: ${err.message}`);
+  } finally {
+    if (saveBtn) saveBtn.disabled = false;
+  }
+}
+
+async function deleteCalendar(id, name) {
+  const confirmed = confirm(
+    `Are you sure you want to remove subscription "${name}"?\nThis will remove it from NotableDB storage.`
+  );
+  if (!confirmed) return;
+
+  try {
+    const res = await fetch(`/calendars/${encodeURIComponent(id)}`, {
+      method: 'DELETE',
+    });
+    if (!res.ok) {
+      const errJson = await res.json().catch(() => ({}));
+      throw new Error(errJson.error || `HTTP ${res.status}`);
+    }
+
+    if (window.UIkit && window.UIkit.notification) {
+      UIkit.notification({
+        message: `Subscription "${name}" removed from NotableDB.`,
+        status: 'primary',
+        pos: 'top-center',
+        timeout: 3000,
+      });
+    }
+
+    await Promise.all([loadCalendars(), loadEvents()]);
+  } catch (err) {
+    console.error('Failed to delete calendar:', err);
+    alert(`Failed to remove calendar: ${err.message}`);
+  }
+}
+
+function switchTab(target) {
+  const eventsView = e('view-events');
+  const calendarsView = e('view-calendars');
+  const tabEventsLi = e('tab-events-li');
+  const tabCalendarsLi = e('tab-calendars-li');
+
+  if (target === 'calendars') {
+    if (eventsView) eventsView.style.display = 'none';
+    if (calendarsView) calendarsView.style.display = 'block';
+    if (tabEventsLi) tabEventsLi.classList.remove('uk-active');
+    if (tabCalendarsLi) tabCalendarsLi.classList.add('uk-active');
+    loadCalendars();
+  } else {
+    if (calendarsView) calendarsView.style.display = 'none';
+    if (eventsView) eventsView.style.display = 'block';
+    if (tabCalendarsLi) tabCalendarsLi.classList.remove('uk-active');
+    if (tabEventsLi) tabEventsLi.classList.add('uk-active');
+    applyFilter();
+  }
+}
+
 async function syncEvents() {
   const syncBtn = e('sync');
   if (syncBtn) {
@@ -363,7 +698,7 @@ async function syncEvents() {
       window.location.href = '/login';
       return;
     }
-    await loadEvents();
+    await Promise.all([loadEvents(), loadCalendars()]);
   } catch (err) {
     console.error('Sync failed:', err);
   } finally {
@@ -393,8 +728,39 @@ function init() {
     searchInput.oninput = debouncedApplyFilter;
   }
 
+  // Navigation tab listeners
+  const tabEvents = e('tab-events');
+  if (tabEvents) {
+    tabEvents.onclick = (e) => {
+      e.preventDefault();
+      switchTab('events');
+    };
+  }
+  const tabCalendars = e('tab-calendars');
+  if (tabCalendars) {
+    tabCalendars.onclick = (e) => {
+      e.preventDefault();
+      switchTab('calendars');
+    };
+  }
+
+  // Calendar management listeners
+  const btnAddCal = e('btn-add-calendar');
+  if (btnAddCal) {
+    btnAddCal.onclick = openAddCalendarModal;
+  }
+  const btnRefreshCals = e('btn-refresh-calendars');
+  if (btnRefreshCals) {
+    btnRefreshCals.onclick = loadCalendars;
+  }
+  const formCal = e('form-calendar');
+  if (formCal) {
+    formCal.onsubmit = submitCalendarForm;
+  }
+
   loadCurrentUser();
   loadEvents();
+  loadCalendars();
   setInterval(loadEvents, 30000);
 }
 
@@ -403,3 +769,4 @@ if (document.readyState === 'loading') {
 } else {
   init();
 }
+

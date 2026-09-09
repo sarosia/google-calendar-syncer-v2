@@ -14,6 +14,7 @@
     "@sarosia/apper": "github:sarosia/apper",
     "@sarosia/datetime": "^1.0.0",
     "@sarosia/e": "github:sarosia/e",
+    "@sarosia/notabledb": "github:sarosia/notabledb",
     "@sarosia/once": "^1.0.0",
     "axios": "^1.7.0",
     "express": "^5.2.1",

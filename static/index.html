@@ -27,7 +27,16 @@
       <div class="uk-flex uk-flex-middle" id="user-profile"></div>
     </header>
 
-    <div class="table-card uk-margin-medium-top">
+    <!-- Navigation Tabs between Events and Calendar Subscriptions -->
+    <div class="view-tabs uk-margin-small-top uk-margin-small-bottom">
+      <ul class="uk-tab uk-margin-remove" id="main-tabs">
+        <li class="uk-active" id="tab-events-li"><a href="#" id="tab-events"><span uk-icon="icon: calendar; ratio: 0.8" class="uk-margin-small-right"></span>Events <span class="uk-badge uk-margin-small-left" id="badge-events-count">0</span></a></li>
+        <li id="tab-calendars-li"><a href="#" id="tab-calendars"><span uk-icon="icon: settings; ratio: 0.8" class="uk-margin-small-right"></span>Subscribed Calendars <span class="uk-badge uk-margin-small-left" id="badge-calendars-count">0</span></a></li>
+      </ul>
+    </div>
+
+    <!-- SECTION 1: EVENTS VIEW -->
+    <div id="view-events" class="table-card">
       <!-- Toolbar: Left has Sync Now & Status, Right has Filters & Search -->
       <div class="toolbar-container uk-margin-bottom">
         <div class="toolbar-left uk-flex uk-flex-middle">
@@ -72,6 +81,130 @@
             </tr>
           </tbody>
         </table>
+      </div>
+    </div>
+
+    <!-- SECTION 2: CALENDARS & SUBSCRIPTIONS VIEW (NotableDB Backed) -->
+    <div id="view-calendars" class="table-card" style="display: none;">
+      <div class="toolbar-container uk-margin-bottom">
+        <div class="toolbar-left uk-flex uk-flex-middle">
+          <button class="uk-button uk-button-primary uk-button-small btn-action-primary" id="btn-add-calendar">
+            <span uk-icon="icon: plus; ratio: 0.8" class="uk-margin-small-right"></span>Add Calendar
+          </button>
+          <span class="status-indicator" id="calendars-status-text">Managed via NotableDB storage</span>
+        </div>
+        <div class="toolbar-right uk-flex uk-flex-middle">
+          <button class="uk-button uk-button-default uk-button-small" id="btn-refresh-calendars">
+            <span uk-icon="icon: refresh; ratio: 0.8" class="uk-margin-small-right"></span>Refresh Calendars
+          </button>
+        </div>
+      </div>
+
+      <div class="uk-overflow-auto">
+        <table class="uk-table uk-table-divider uk-table-striped uk-table-hover uk-table-middle">
+          <thead>
+            <tr>
+              <th style="width: 200px;">Calendar Name</th>
+              <th>Feed URL</th>
+              <th style="width: 200px;">Target Google Calendar</th>
+              <th style="width: 260px;">Filters</th>
+              <th style="width: 80px;" class="uk-text-center">Events</th>
+              <th style="width: 160px;" class="uk-text-right">Actions</th>
+            </tr>
+          </thead>
+          <tbody id="calendars-list">
+            <tr>
+              <td colspan="6" class="uk-text-center uk-text-muted uk-padding">Loading subscribed calendars...</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- MODAL: ADD / EDIT CALENDAR -->
+    <div id="modal-calendar" uk-modal>
+      <div class="uk-modal-dialog uk-modal-body uk-margin-auto-vertical modal-custom-body">
+        <button class="uk-modal-close-default" type="button" uk-close></button>
+        <h2 class="uk-modal-title" id="modal-calendar-title">Subscribe to Calendar</h2>
+        <form id="form-calendar" class="uk-form-stacked">
+          <input type="hidden" id="calendar-id" value="">
+
+          <div class="uk-margin-small">
+            <label class="uk-form-label uk-text-bold">Calendar Name *</label>
+            <div class="uk-form-controls">
+              <input class="uk-input uk-form-small" id="cal-name" type="text" placeholder="e.g. Sophie - Soccer" required>
+            </div>
+          </div>
+
+          <div class="uk-margin-small">
+            <label class="uk-form-label uk-text-bold">ICS Feed URL *</label>
+            <div class="uk-form-controls">
+              <input class="uk-input uk-form-small" id="cal-url" type="text" placeholder="https://... or webcal://..." required>
+            </div>
+            <div class="uk-text-meta uk-margin-xsmall-top">ICS subscription link from Byga, TeamSnap, Veracross, etc.</div>
+          </div>
+
+          <div class="uk-margin-small">
+            <label class="uk-form-label uk-text-bold">Target Google Calendar ID (Optional)</label>
+            <div class="uk-form-controls">
+              <input class="uk-input uk-form-small" id="cal-target-id" type="text" placeholder="e.g. xyz@group.calendar.google.com">
+            </div>
+            <div class="uk-text-meta uk-margin-xsmall-top">Leave empty for local viewing only without syncing to Google Calendar.</div>
+          </div>
+
+          <div class="uk-margin-small">
+            <label class="uk-form-label uk-text-bold">Event ID Strategy</label>
+            <div class="uk-form-controls">
+              <select class="uk-select uk-form-small" id="cal-id-strategy">
+                <option value="default">Standard UID (Default)</option>
+                <option value="time_summary">Time + Summary (Recommended for Byga / TeamSnap)</option>
+              </select>
+            </div>
+          </div>
+
+          <hr class="uk-divider-icon uk-margin-small">
+          <h4 class="uk-heading-line uk-margin-small-bottom"><span>Calendar Filters</span></h4>
+
+          <div class="uk-grid-small uk-child-width-1-2" uk-grid>
+            <div>
+              <label class="uk-form-label uk-text-bold">Past Window</label>
+              <input class="uk-input uk-form-small" id="cal-past-window" type="text" placeholder="e.g. 60d or 7d">
+              <div class="uk-text-meta">How far into the past to sync (e.g. 60d)</div>
+            </div>
+            <div>
+              <label class="uk-form-label uk-text-bold">Future Window</label>
+              <input class="uk-input uk-form-small" id="cal-future-window" type="text" placeholder="e.g. 365d or 90d">
+              <div class="uk-text-meta">How far into future to sync (e.g. 365d)</div>
+            </div>
+          </div>
+
+          <div class="uk-margin-small">
+            <label class="uk-flex uk-flex-middle">
+              <input class="uk-checkbox" type="checkbox" id="cal-exclude-cancelled" checked>
+              <span class="uk-margin-small-left uk-text-bold">Exclude Cancelled Events</span>
+            </label>
+          </div>
+
+          <div class="uk-margin-small">
+            <label class="uk-form-label uk-text-bold">Exclude Summaries (One rule per line)</label>
+            <div class="uk-form-controls">
+              <textarea class="uk-textarea uk-form-small filter-textarea" id="cal-exclude-summaries" rows="3" placeholder="Optional Class&#10;/\b(Cancelled)\b/i"></textarea>
+            </div>
+            <div class="uk-text-meta uk-margin-xsmall-top">Keywords or regex (e.g. <code>/\b(Practice)\b/i</code>) to ignore.</div>
+          </div>
+
+          <div class="uk-margin-small">
+            <label class="uk-form-label uk-text-bold">Include Summaries (Optional, one rule per line)</label>
+            <div class="uk-form-controls">
+              <textarea class="uk-textarea uk-form-small filter-textarea" id="cal-include-summaries" rows="2" placeholder="Leave empty to include all events"></textarea>
+            </div>
+          </div>
+
+          <div class="uk-modal-footer uk-text-right uk-padding-remove-bottom uk-margin-top">
+            <button class="uk-button uk-button-default uk-modal-close" type="button">Cancel</button>
+            <button class="uk-button uk-button-primary btn-action-primary" type="submit" id="btn-save-calendar">Save Subscription</button>
+          </div>
+        </form>
       </div>
     </div>
   </div>
