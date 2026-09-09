@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="utf-8">
+  <title>Google Calendar Syncer</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Roboto+Mono:wght@400;500&family=Roboto:wght@400;500;700&display=swap" rel="stylesheet" media="print" onload="this.media='all'">
+  <link rel="stylesheet" href="css/uikit.min.css" />
+  <link rel="stylesheet" href="apper-auth.css" />
+  <link rel="stylesheet" href="main.css" />
+  <script src="js/uikit.min.js"></script>
+  <script src="js/uikit-icons.min.js"></script>
+  <script src="apper-auth.js"></script>
+  <script type="module" src="app.js"></script>
+</head>
+
+<body>
+  <div class="uk-container uk-container-expand uk-margin-top uk-margin-large-bottom">
+    <!-- Top Header Bar with Title on left, Login profile on top right -->
+    <header class="app-header uk-flex uk-flex-between uk-flex-middle">
+      <div class="uk-flex uk-flex-middle">
+        <h1 class="uk-heading-bullet page-title uk-margin-remove">Google Calendar Syncer</h1>
+      </div>
+      <div class="uk-flex uk-flex-middle" id="user-profile"></div>
+    </header>
+
+    <div class="table-card uk-margin-medium-top">
+      <!-- Toolbar: Left has Sync Now & Status, Right has Filters & Search -->
+      <div class="toolbar-container uk-margin-bottom">
+        <div class="toolbar-left uk-flex uk-flex-middle">
+          <button class="uk-button uk-button-default uk-button-small sync-button" id="sync">
+            <span uk-icon="icon: refresh; ratio: 0.8" class="uk-margin-small-right"></span>Sync Now
+          </button>
+          <span class="status-indicator" id="status-text">Loading events...</span>
+        </div>
+        <div class="toolbar-right uk-flex uk-flex-middle">
+          <div class="filter-item">
+            <select class="uk-select uk-form-small" id="time-filter">
+              <option value="upcoming" selected>Upcoming Events</option>
+              <option value="all">All Events (Past &amp; Future)</option>
+              <option value="past">Past Events</option>
+            </select>
+          </div>
+          <div class="filter-item">
+            <select class="uk-select uk-form-small" id="source-select">
+              <option value="">All Calendar Sources</option>
+            </select>
+          </div>
+          <div class="filter-item search-item uk-inline">
+            <span class="uk-form-icon uk-form-icon-flip" uk-icon="icon: search; ratio: 0.8"></span>
+            <input class="uk-input uk-form-small" type="text" id="search-input" placeholder="Search events...">
+          </div>
+        </div>
+      </div>
+
+      <div class="uk-overflow-auto">
+        <table class="uk-table uk-table-divider uk-table-striped uk-table-hover uk-table-middle">
+          <thead>
+            <tr>
+              <th style="width: 220px; min-width: 200px;">Time</th>
+              <th style="width: 170px; min-width: 160px;">Source</th>
+              <th>Event</th>
+              <th style="width: 260px; min-width: 200px;">Location</th>
+            </tr>
+          </thead>
+          <tbody id="upcoming">
+            <tr>
+              <td colspan="4" class="uk-text-center uk-text-muted uk-padding">Loading events...</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</body>
+
+</html>

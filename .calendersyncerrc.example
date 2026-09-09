@@ -1,0 +1,41 @@
+{
+  "port": 3001,
+  "syncFrequency": "15m",
+  "defaultFilter": {
+    "excludeCancelled": true,
+    "futureWindow": "365d",
+    "pastWindow": "60d"
+  },
+  "credentialPath": "~/.google.cred.json",
+  "auth": {
+    "enabled": true,
+    "clientId": "YOUR_GOOGLE_CLIENT_ID.apps.googleusercontent.com",
+    "clientSecret": "YOUR_GOOGLE_CLIENT_SECRET",
+    "callbackUrl": "http://localhost:3001/auth/callback",
+    "sessionSecret": "replace-with-a-random-secret-key",
+    "sessionMaxAge": "7d",
+    "allowedEmails": [
+      "user@example.com"
+    ]
+  },
+  "calendars": [
+    {
+      "name": "Sample School Calendar",
+      "url": "https://example.com/calendar.ics",
+      "targetCalendarId": "your-target-calendar-id@group.calendar.google.com",
+      "filter": {
+        "excludeSummaries": [
+          "Optional Class",
+          "/\\b(Cancelled)\\b/i"
+        ]
+      }
+    },
+    {
+      "name": "Sample Sports Calendar",
+      "url": "http://example.com/sports.ics",
+      "targetCalendarId": "your-sports-calendar-id@group.calendar.google.com",
+      "idStrategy": "time_summary",
+      "filter": {}
+    }
+  ]
+}

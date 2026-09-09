@@ -1,0 +1,8 @@
+node_modules/
+*.log
+.calendersyncerrc
+.calendarsyncerrc
+.syncerrc
+*-audit.json
+.*-audit.json
+.DS_Store
