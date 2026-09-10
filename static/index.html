@@ -18,7 +18,7 @@
 </head>
 
 <body>
-  <div class="uk-container uk-container-expand uk-margin-top uk-margin-large-bottom">
+  <div class="uk-container uk-container-expand uk-margin-top uk-margin-large-bottom app-main-container">
     <!-- Top Header Bar with Title on left, Login profile on top right -->
     <header class="app-header uk-flex uk-flex-between uk-flex-middle">
       <div class="uk-flex uk-flex-middle">
@@ -66,7 +66,7 @@
       </div>
 
       <div class="uk-overflow-auto">
-        <table class="uk-table uk-table-divider uk-table-striped uk-table-hover uk-table-middle">
+        <table class="uk-table uk-table-divider uk-table-striped uk-table-hover uk-table-middle responsive-events-table">
           <thead>
             <tr>
               <th style="width: 220px; min-width: 200px;">Time</th>
@@ -76,8 +76,8 @@
             </tr>
           </thead>
           <tbody id="upcoming">
-            <tr>
-              <td colspan="4" class="uk-text-center uk-text-muted uk-padding">Loading events...</td>
+            <tr class="empty-table-row">
+              <td colspan="4" class="uk-text-center uk-text-muted uk-padding empty-table-cell">Loading events...</td>
             </tr>
           </tbody>
         </table>
@@ -101,7 +101,7 @@
       </div>
 
       <div class="uk-overflow-auto">
-        <table class="uk-table uk-table-divider uk-table-striped uk-table-hover uk-table-middle">
+        <table class="uk-table uk-table-divider uk-table-striped uk-table-hover uk-table-middle responsive-calendars-table">
           <thead>
             <tr>
               <th style="width: 200px;">Calendar Name</th>
@@ -113,8 +113,8 @@
             </tr>
           </thead>
           <tbody id="calendars-list">
-            <tr>
-              <td colspan="6" class="uk-text-center uk-text-muted uk-padding">Loading subscribed calendars...</td>
+            <tr class="empty-table-row">
+              <td colspan="6" class="uk-text-center uk-text-muted uk-padding empty-table-cell">Loading subscribed calendars...</td>
             </tr>
           </tbody>
         </table>
@@ -165,7 +165,7 @@
           <hr class="uk-divider-icon uk-margin-small">
           <h4 class="uk-heading-line uk-margin-small-bottom"><span>Calendar Filters</span></h4>
 
-          <div class="uk-grid-small uk-child-width-1-2" uk-grid>
+          <div class="uk-grid-small uk-child-width-1-2@s uk-child-width-1-1" uk-grid>
             <div>
               <label class="uk-form-label uk-text-bold">Past Window</label>
               <input class="uk-input uk-form-small" id="cal-past-window" type="text" placeholder="e.g. 60d or 7d">
@@ -200,9 +200,9 @@
             </div>
           </div>
 
-          <div class="uk-modal-footer uk-text-right uk-padding-remove-bottom uk-margin-top">
-            <button class="uk-button uk-button-default uk-modal-close" type="button">Cancel</button>
-            <button class="uk-button uk-button-primary btn-action-primary" type="submit" id="btn-save-calendar">Save Subscription</button>
+          <div class="uk-modal-footer uk-text-right uk-padding-remove-bottom uk-margin-top modal-footer-actions">
+            <button class="uk-button uk-button-default uk-modal-close modal-btn" type="button">Cancel</button>
+            <button class="uk-button uk-button-primary btn-action-primary modal-btn" type="submit" id="btn-save-calendar">Save Subscription</button>
           </div>
         </form>
       </div>

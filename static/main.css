@@ -50,7 +50,10 @@ body {
   color: #ef4444;
   display: inline-flex;
   align-items: center;
-  padding: 2px;
+  justify-content: center;
+  padding: 4px 6px;
+  min-width: 32px;
+  min-height: 32px;
   text-decoration: none !important;
   transition: color 0.15s ease-in-out;
 }
@@ -395,4 +398,454 @@ body {
   font-family: 'Roboto Mono', monospace, sans-serif;
   font-size: 0.8rem !important;
   line-height: 1.4;
+}
+
+/* Calendar UI Badges & Buttons */
+.cal-strat-badge {
+  background: #f1f5f9;
+  color: #475569;
+  font-size: 0.7rem;
+  font-weight: 500;
+  border: 1px solid #e2e8f0;
+}
+
+.cal-count-badge {
+  background: #e2e8f0;
+  color: #1e293b;
+  font-size: 0.75rem;
+  font-weight: 600;
+}
+
+.btn-cal-action {
+  font-size: 0.8rem;
+  font-weight: 500;
+  border-radius: 6px;
+  padding: 0 10px;
+  height: 32px;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.btn-cal-delete {
+  background-color: #ef4444 !important;
+  color: #ffffff !important;
+  border: none !important;
+}
+
+.btn-cal-delete:hover {
+  background-color: #dc2626 !important;
+}
+
+/* ==========================================================================
+   Mobile & Responsive Styles
+   ========================================================================== */
+
+/* Tablets and Smartphones (<= 768px) */
+@media (max-width: 768px) {
+  .app-main-container {
+    padding-left: 12px !important;
+    padding-right: 12px !important;
+    margin-top: 10px !important;
+    margin-bottom: 24px !important;
+  }
+
+  /* Header adjustments */
+  .app-header {
+    padding: 6px 0;
+    margin-bottom: 6px;
+  }
+
+  .page-title {
+    font-size: 1.3rem;
+  }
+
+  .user-email-text {
+    max-width: 140px;
+    font-size: 0.78rem;
+  }
+
+  /* View Navigation Tabs: Full width equal buttons */
+  .view-tabs .uk-tab {
+    display: flex;
+    width: 100%;
+  }
+
+  .view-tabs .uk-tab > li {
+    flex: 1 1 0;
+    text-align: center;
+  }
+
+  .view-tabs .uk-tab > li > a {
+    justify-content: center;
+    padding: 10px 8px;
+    font-size: 0.875rem;
+  }
+
+  /* Table Cards */
+  .table-card {
+    padding: 14px 12px;
+    border-radius: 8px;
+  }
+
+  /* Toolbar */
+  .toolbar-container {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 10px;
+  }
+
+  .toolbar-left {
+    width: 100%;
+    justify-content: space-between;
+  }
+
+  .sync-button,
+  .btn-action-primary,
+  #btn-refresh-calendars {
+    min-height: 40px;
+    padding: 0 14px;
+    font-size: 0.875rem;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .status-indicator {
+    font-size: 0.75rem;
+    white-space: normal;
+    text-align: right;
+  }
+
+  .toolbar-right {
+    width: 100%;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+  }
+
+  .toolbar-right .search-item {
+    grid-column: 1 / -1;
+    width: 100%;
+    min-width: 0;
+  }
+
+  .toolbar-right .filter-item {
+    min-width: 0;
+    width: 100%;
+  }
+
+  .filter-item select,
+  .filter-item input {
+    height: 40px !important;
+    font-size: 16px !important; /* Prevents auto-zoom in iOS Safari */
+  }
+
+  /* Transform Events Table to Responsive Cards */
+  table.responsive-events-table {
+    display: block !important;
+    width: 100% !important;
+  }
+
+  table.responsive-events-table thead {
+    display: none !important;
+  }
+
+  table.responsive-events-table tbody {
+    display: block !important;
+    width: 100% !important;
+  }
+
+  table.responsive-events-table tbody tr.event-row {
+    display: block !important;
+    width: 100% !important;
+    box-sizing: border-box;
+    background: #ffffff !important;
+    border: 1px solid #e2e8f0 !important;
+    border-radius: 10px;
+    margin-bottom: 12px;
+    padding: 14px;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
+  }
+
+  table.responsive-events-table tbody tr.event-row:hover {
+    background: #f8fafc !important;
+  }
+
+  table.responsive-events-table tbody td {
+    display: block !important;
+    width: 100% !important;
+    box-sizing: border-box;
+    padding: 2px 0 !important;
+    border: none !important;
+    white-space: normal !important;
+  }
+
+  .event-time-cell {
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: #1e40af;
+    white-space: normal !important;
+    margin-bottom: 4px;
+  }
+
+  .event-source-cell {
+    display: flex !important;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 6px;
+    margin-bottom: 6px;
+  }
+
+  .event-source-cell > div {
+    margin-top: 0 !important;
+  }
+
+  .event-title {
+    font-size: 1rem;
+    font-weight: 600;
+    line-height: 1.35;
+    color: #0f172a;
+    margin-top: 2px;
+  }
+
+  .event-desc {
+    font-size: 0.825rem;
+    color: #475569;
+    margin-top: 4px;
+  }
+
+  .event-loc-cell {
+    font-size: 0.825rem;
+    color: #475569;
+    margin-top: 6px;
+  }
+
+  .event-loc-empty {
+    display: none !important;
+  }
+
+  .event-debug-meta {
+    margin-top: 8px;
+    gap: 4px;
+  }
+
+  .debug-chip {
+    font-size: 0.68rem;
+    padding: 2px 6px;
+    max-width: 100%;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  /* Transform Subscribed Calendars Table to Responsive Cards */
+  table.responsive-calendars-table {
+    display: block !important;
+    width: 100% !important;
+  }
+
+  table.responsive-calendars-table thead {
+    display: none !important;
+  }
+
+  table.responsive-calendars-table tbody {
+    display: block !important;
+    width: 100% !important;
+  }
+
+  table.responsive-calendars-table tbody tr.cal-row {
+    display: block !important;
+    width: 100% !important;
+    box-sizing: border-box;
+    background: #ffffff !important;
+    border: 1px solid #e2e8f0 !important;
+    border-radius: 10px;
+    margin-bottom: 14px;
+    padding: 14px;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
+  }
+
+  table.responsive-calendars-table tbody tr.cal-row:hover {
+    background: #f8fafc !important;
+  }
+
+  table.responsive-calendars-table tbody td {
+    display: block !important;
+    width: 100% !important;
+    box-sizing: border-box;
+    padding: 3px 0 !important;
+    border: none !important;
+    white-space: normal !important;
+  }
+
+  .cal-cell-name {
+    margin-bottom: 6px;
+  }
+
+  .cal-cell-url {
+    margin-bottom: 6px;
+    display: flex !important;
+    align-items: center;
+  }
+
+  .cal-cell-url .cal-url-code {
+    max-width: calc(100% - 32px);
+  }
+
+  .cal-cell-gcal,
+  .cal-cell-filter,
+  .cal-cell-count {
+    display: flex !important;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 6px;
+    font-size: 0.85rem;
+    padding: 4px 0 !important;
+  }
+
+  .cal-cell-gcal::before {
+    content: "Target GCal:";
+    font-weight: 600;
+    color: #64748b;
+    font-size: 0.78rem;
+    min-width: 85px;
+  }
+
+  .cal-cell-filter::before {
+    content: "Filters:";
+    font-weight: 600;
+    color: #64748b;
+    font-size: 0.78rem;
+    min-width: 85px;
+  }
+
+  .cal-cell-count::before {
+    content: "Events:";
+    font-weight: 600;
+    color: #64748b;
+    font-size: 0.78rem;
+    min-width: 85px;
+  }
+
+  .cal-cell-count {
+    text-align: left !important;
+  }
+
+  .cal-cell-actions {
+    margin-top: 10px;
+    padding-top: 10px !important;
+    border-top: 1px solid #f1f5f9 !important;
+    display: flex !important;
+    justify-content: stretch;
+    gap: 8px;
+    text-align: left !important;
+  }
+
+  .btn-cal-action {
+    flex: 1 1 0;
+    min-height: 40px;
+    justify-content: center;
+    font-size: 0.875rem;
+    padding: 0 14px;
+    margin: 0 !important;
+  }
+
+  /* Empty / Loading Table Row */
+  table.responsive-events-table tbody tr.empty-table-row,
+  table.responsive-calendars-table tbody tr.empty-table-row {
+    background: transparent !important;
+    border: none !important;
+    box-shadow: none !important;
+    padding: 0 !important;
+  }
+
+  table.responsive-events-table tbody td.empty-table-cell,
+  table.responsive-calendars-table tbody td.empty-table-cell {
+    padding: 24px 8px !important;
+    text-align: center !important;
+  }
+
+  table.responsive-events-table tbody td.empty-table-cell::before,
+  table.responsive-calendars-table tbody td.empty-table-cell::before {
+    display: none !important;
+  }
+
+  /* Modal on Mobile */
+  .modal-custom-body {
+    width: calc(100vw - 20px) !important;
+    max-width: 100% !important;
+    margin: 10px auto !important;
+    padding: 18px 14px !important;
+    border-radius: 8px;
+    max-height: 90vh;
+    overflow-y: auto;
+  }
+
+  .modal-custom-body .uk-modal-title {
+    font-size: 1.2rem;
+    margin-bottom: 12px;
+  }
+
+  .modal-custom-body input,
+  .modal-custom-body select {
+    height: 40px !important;
+    font-size: 16px !important;
+  }
+
+  .modal-custom-body textarea {
+    font-size: 14px !important;
+  }
+
+  .modal-footer-actions {
+    display: flex;
+    gap: 8px;
+    justify-content: stretch;
+  }
+
+  .modal-footer-actions .modal-btn {
+    flex: 1 1 0;
+    min-height: 42px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.9rem;
+    font-weight: 500;
+  }
+}
+
+/* Extra small smartphones (<= 480px) */
+@media (max-width: 480px) {
+  .app-header {
+    gap: 6px;
+  }
+
+  .page-title {
+    font-size: 1.15rem;
+  }
+
+  .user-email-text {
+    max-width: 110px;
+    font-size: 0.72rem;
+  }
+
+  .toolbar-right {
+    grid-template-columns: 1fr;
+  }
+
+  .toolbar-left {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 6px;
+  }
+
+  .toolbar-left .status-indicator {
+    text-align: left;
+    white-space: normal;
+  }
+
+  .cal-cell-gcal::before,
+  .cal-cell-filter::before,
+  .cal-cell-count::before {
+    min-width: 70px;
+  }
 }

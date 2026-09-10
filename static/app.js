@@ -40,11 +40,11 @@ function renderEvents(events) {
     e('upcoming', {}, [
       [
         'tr',
-        {},
+        { class: 'empty-table-row' },
         [
           [
             'td',
-            { colspan: '4', class: 'uk-text-center uk-text-muted uk-padding' },
+            { colspan: '4', class: 'uk-text-center uk-text-muted uk-padding empty-table-cell' },
             'No upcoming events match the current filter.',
           ],
         ],
@@ -73,6 +73,7 @@ function renderEvents(events) {
     const location = event.location || '-';
     const sourceName = event.sourceName || 'Default';
     const timeFormatted = formatEventDateTime(event.startTime, event.endTime);
+    const hasLocation = location && location !== '-';
 
     let syncMarker;
     let statusChip;
@@ -176,14 +177,30 @@ function renderEvents(events) {
       ['div', { class: 'uk-margin-xsmall-top' }, [syncMarker]],
     ];
 
+    const locDisplay = hasLocation
+      ? [
+          ['span', { class: 'loc-pin-icon' }, '📍 '],
+          ['span', {}, location],
+        ]
+      : location;
+
     return [
       'tr',
-      {},
+      { class: 'event-row' },
       [
-        ['td', { class: 'event-time-cell' }, timeFormatted],
-        ['td', {}, sourceContent],
-        ['td', {}, eventDetails],
-        ['td', { class: 'event-loc' }, location],
+        ['td', { class: 'event-time-cell', 'data-label': 'Time' }, timeFormatted],
+        ['td', { class: 'event-source-cell', 'data-label': 'Source' }, sourceContent],
+        ['td', { class: 'event-title-cell', 'data-label': 'Event' }, eventDetails],
+        [
+          'td',
+          {
+            class: hasLocation
+              ? 'event-loc event-loc-cell'
+              : 'event-loc event-loc-cell event-loc-empty',
+            'data-label': 'Location',
+          },
+          locDisplay,
+        ],
       ],
     ];
   });
@@ -405,8 +422,8 @@ function renderCalendars(calendars) {
 
   if (!calendars || calendars.length === 0) {
     container.innerHTML = `
-      <tr>
-        <td colspan="6" class="uk-text-center uk-text-muted uk-padding">
+      <tr class="empty-table-row">
+        <td colspan="6" class="uk-text-center uk-text-muted uk-padding empty-table-cell">
           No calendar subscriptions configured yet. Click <strong>"+ Add Calendar"</strong> to subscribe to your first feed.
         </td>
       </tr>
@@ -417,9 +434,12 @@ function renderCalendars(calendars) {
   container.innerHTML = '';
   for (const cal of calendars) {
     const tr = document.createElement('tr');
+    tr.className = 'cal-row';
 
     // 1. Calendar Name & Strategy
     const nameTd = document.createElement('td');
+    nameTd.className = 'cal-cell-name';
+    nameTd.setAttribute('data-label', 'Calendar');
     const stratLabel =
       cal.idStrategy === 'time_summary'
         ? 'Time + Summary UID'
@@ -427,7 +447,7 @@ function renderCalendars(calendars) {
     nameTd.innerHTML = `
       <div class="cal-name-text">${escapeHtml(cal.name)}</div>
       <div class="uk-margin-xsmall-top">
-        <span class="uk-badge" style="background: #f1f5f9; color: #475569; font-size: 0.7rem; font-weight: 500;">
+        <span class="uk-badge cal-strat-badge">
           ${stratLabel}
         </span>
       </div>
@@ -436,16 +456,20 @@ function renderCalendars(calendars) {
 
     // 2. Feed URL
     const urlTd = document.createElement('td');
+    urlTd.className = 'cal-cell-url';
+    urlTd.setAttribute('data-label', 'Feed URL');
     const safeUrl = escapeHtml(cal.url);
     const shortUrl = safeUrl.length > 38 ? safeUrl.slice(0, 35) + '...' : safeUrl;
     urlTd.innerHTML = `
       <span class="cal-url-code" title="${safeUrl}">${shortUrl}</span>
-      <a href="${safeUrl}" target="_blank" rel="noopener noreferrer" class="uk-icon-link uk-margin-small-left" uk-icon="icon: link; ratio: 0.8" title="Open / test feed URL"></a>
+      <a href="${safeUrl}" target="_blank" rel="noopener noreferrer" class="uk-icon-link uk-margin-small-left cal-url-link" uk-icon="icon: link; ratio: 0.8" title="Open / test feed URL"></a>
     `;
     tr.appendChild(urlTd);
 
     // 3. Target Google Calendar
     const gcalTd = document.createElement('td');
+    gcalTd.className = 'cal-cell-gcal';
+    gcalTd.setAttribute('data-label', 'Target GCal');
     if (cal.targetCalendarId) {
       gcalTd.innerHTML = `
         <span class="debug-chip debug-chip-gcal" title="${escapeHtml(cal.targetCalendarId)}">
@@ -460,6 +484,8 @@ function renderCalendars(calendars) {
 
     // 4. Active Filters
     const filterTd = document.createElement('td');
+    filterTd.className = 'cal-cell-filter';
+    filterTd.setAttribute('data-label', 'Filters');
     const filter = cal.filter || {};
     const pills = [];
     if (filter.pastWindow || filter.futureWindow) {
@@ -487,27 +513,27 @@ function renderCalendars(calendars) {
 
     // 5. Events count
     const countTd = document.createElement('td');
-    countTd.className = 'uk-text-center';
-    countTd.innerHTML = `<span class="uk-badge" style="background: #e2e8f0; color: #1e293b;">${cal.eventsCount || 0}</span>`;
+    countTd.className = 'cal-cell-count uk-text-center';
+    countTd.setAttribute('data-label', 'Events');
+    countTd.innerHTML = `<span class="uk-badge cal-count-badge">${cal.eventsCount || 0}</span>`;
     tr.appendChild(countTd);
 
     // 6. Actions (Edit & Delete)
     const actionsTd = document.createElement('td');
-    actionsTd.className = 'uk-text-right uk-text-nowrap';
+    actionsTd.className = 'cal-cell-actions uk-text-right';
+    actionsTd.setAttribute('data-label', 'Actions');
 
     const editBtn = document.createElement('button');
     editBtn.className =
-      'uk-button uk-button-default uk-button-small uk-margin-small-right';
-    editBtn.style.padding = '0 8px';
+      'uk-button uk-button-default uk-button-small btn-cal-action';
     editBtn.innerHTML =
-      '<span uk-icon="icon: file-edit; ratio: 0.8"></span> Edit';
+      '<span uk-icon="icon: file-edit; ratio: 0.8" class="uk-margin-xsmall-right"></span>Edit';
     editBtn.title = 'Edit calendar & filters';
     editBtn.onclick = () => openEditCalendarModal(cal);
 
     const deleteBtn = document.createElement('button');
-    deleteBtn.className = 'uk-button uk-button-danger uk-button-small';
-    deleteBtn.style.padding = '0 8px';
-    deleteBtn.innerHTML = '<span uk-icon="icon: trash; ratio: 0.8"></span>';
+    deleteBtn.className = 'uk-button uk-button-danger uk-button-small btn-cal-action btn-cal-delete';
+    deleteBtn.innerHTML = '<span uk-icon="icon: trash; ratio: 0.8" class="uk-margin-xsmall-right"></span>Delete';
     deleteBtn.title = 'Remove calendar subscription';
     deleteBtn.onclick = () => deleteCalendar(cal.id, cal.name);
 
