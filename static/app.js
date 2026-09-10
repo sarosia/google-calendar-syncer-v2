@@ -288,20 +288,18 @@ function renderUserProfile(user) {
   const container = document.getElementById('user-profile');
   if (!container) return;
 
-  const displayName = user.name || user.email;
+  const displayName = user.name || 'User';
   const initial = (displayName || 'U').charAt(0).toUpperCase();
   const avatarHtml = user.picture
-    ? `<img src="${escapeHtml(user.picture)}" alt="${escapeHtml(displayName)}" class="user-avatar-img" />`
+    ? `<img src="${escapeHtml(user.picture)}" alt="Profile" class="user-avatar-img" />`
     : `<div class="user-avatar-fallback">${escapeHtml(initial)}</div>`;
 
   container.innerHTML = `
     <div class="uk-inline">
-      <button class="user-avatar-btn" type="button" aria-label="User profile: ${escapeHtml(displayName)}" title="${escapeHtml(displayName)} (${escapeHtml(user.email)})">
+      <button class="user-avatar-btn" type="button" aria-label="Account" title="Account">
         ${avatarHtml}
       </button>
       <div uk-dropdown="mode: click; pos: bottom-right; offset: 8" class="user-dropdown-card">
-        <div class="user-dropdown-name">${escapeHtml(displayName)}</div>
-        <div class="user-dropdown-email" title="${escapeHtml(user.email)}">${escapeHtml(user.email)}</div>
         <a href="/auth/logout" class="uk-button uk-button-small uk-width-1-1 user-dropdown-logout-btn">
           <span uk-icon="icon: sign-out; ratio: 0.8" class="uk-margin-small-right"></span>Sign Out
         </a>
