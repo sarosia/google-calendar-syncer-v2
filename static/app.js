@@ -289,17 +289,23 @@ function renderUserProfile(user) {
   if (!container) return;
 
   const displayName = user.name || user.email;
-  const avatar = user.picture
-    ? `<img src="${user.picture}" alt="${displayName}" class="uk-border-circle" style="width: 24px; height: 24px; margin-right: 8px;" />`
-    : `<span uk-icon="icon: user; ratio: 0.8" style="margin-right: 8px; color: #64748b;"></span>`;
+  const initial = (displayName || 'U').charAt(0).toUpperCase();
+  const avatarHtml = user.picture
+    ? `<img src="${escapeHtml(user.picture)}" alt="${escapeHtml(displayName)}" class="user-avatar-img" />`
+    : `<div class="user-avatar-fallback">${escapeHtml(initial)}</div>`;
 
   container.innerHTML = `
-    <div class="user-profile-badge">
-      ${avatar}
-      <span class="user-email-text" title="${user.email}">${user.email}</span>
-      <a href="/auth/logout" class="user-logout-btn" title="Sign Out">
-        <span uk-icon="icon: sign-out; ratio: 0.8"></span>
-      </a>
+    <div class="uk-inline">
+      <button class="user-avatar-btn" type="button" aria-label="User profile: ${escapeHtml(displayName)}" title="${escapeHtml(displayName)} (${escapeHtml(user.email)})">
+        ${avatarHtml}
+      </button>
+      <div uk-dropdown="mode: click; pos: bottom-right; offset: 8" class="user-dropdown-card">
+        <div class="user-dropdown-name">${escapeHtml(displayName)}</div>
+        <div class="user-dropdown-email" title="${escapeHtml(user.email)}">${escapeHtml(user.email)}</div>
+        <a href="/auth/logout" class="uk-button uk-button-small uk-width-1-1 user-dropdown-logout-btn">
+          <span uk-icon="icon: sign-out; ratio: 0.8" class="uk-margin-small-right"></span>Sign Out
+        </a>
+      </div>
     </div>
   `;
 }
