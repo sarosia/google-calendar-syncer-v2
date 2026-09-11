@@ -444,15 +444,21 @@ function renderCalendars(calendars) {
     const nameTd = document.createElement('td');
     nameTd.className = 'cal-cell-name';
     nameTd.setAttribute('data-label', 'Calendar');
-    const stratLabel =
-      cal.idStrategy === 'time_summary'
-        ? 'Time + Summary UID'
-        : 'Standard UID';
+    const isTimeSummary = cal.idStrategy === 'time_summary';
+    const stratClass = isTimeSummary
+      ? 'cal-strat-badge cal-strat-time-summary'
+      : 'cal-strat-badge cal-strat-standard';
+    const stratIcon = isTimeSummary
+      ? '<span uk-icon="icon: bolt; ratio: 0.7" class="uk-margin-xsmall-right"></span>'
+      : '<span uk-icon="icon: tag; ratio: 0.7" class="uk-margin-xsmall-right"></span>';
+    const stratLabel = isTimeSummary
+      ? 'Time + Summary UID'
+      : 'Standard UID';
     nameTd.innerHTML = `
       <div class="cal-name-text">${escapeHtml(cal.name)}</div>
       <div class="uk-margin-xsmall-top">
-        <span class="uk-badge cal-strat-badge">
-          ${stratLabel}
+        <span class="${stratClass}" title="ID Strategy: ${escapeHtml(stratLabel)}">
+          ${stratIcon}${stratLabel}
         </span>
       </div>
     `;
@@ -476,13 +482,13 @@ function renderCalendars(calendars) {
     gcalTd.setAttribute('data-label', 'Target GCal');
     if (cal.targetCalendarId) {
       gcalTd.innerHTML = `
-        <span class="debug-chip debug-chip-gcal" title="${escapeHtml(cal.targetCalendarId)}">
-          <span uk-icon="icon: google; ratio: 0.7" class="uk-margin-xsmall-right"></span>
+        <span class="cal-gcal-badge" title="${escapeHtml(cal.targetCalendarId)}">
+          <span uk-icon="icon: google; ratio: 0.75" class="uk-margin-xsmall-right"></span>
           ${escapeHtml(cal.targetCalendarId.slice(0, 16))}…
         </span>
       `;
     } else {
-      gcalTd.innerHTML = `<span class="uk-text-muted uk-text-small">Local only</span>`;
+      gcalTd.innerHTML = `<span class="cal-local-badge">Local only</span>`;
     }
     tr.appendChild(gcalTd);
 
@@ -494,32 +500,34 @@ function renderCalendars(calendars) {
     const pills = [];
     if (filter.pastWindow || filter.futureWindow) {
       pills.push(
-        `<span class="filter-pill filter-pill-window">${filter.pastWindow || '7d'} .. ${filter.futureWindow || '90d'}</span>`
+        `<span class="filter-pill filter-pill-window"><span uk-icon="icon: calendar; ratio: 0.65" class="uk-margin-xsmall-right"></span>${escapeHtml(filter.pastWindow || '7d')} .. ${escapeHtml(filter.futureWindow || '90d')}</span>`
       );
     }
     if (filter.excludeCancelled !== false) {
-      pills.push(`<span class="filter-pill">No cancelled</span>`);
+      pills.push(`<span class="filter-pill filter-pill-cancelled"><span uk-icon="icon: check; ratio: 0.65" class="uk-margin-xsmall-right"></span>No cancelled</span>`);
     }
     if (filter.excludeSummaries && filter.excludeSummaries.length > 0) {
       pills.push(
-        `<span class="filter-pill filter-pill-exclude">${filter.excludeSummaries.length} excluded</span>`
+        `<span class="filter-pill filter-pill-exclude"><span uk-icon="icon: close; ratio: 0.65" class="uk-margin-xsmall-right"></span>${filter.excludeSummaries.length} excluded</span>`
       );
     }
     if (filter.includeSummaries && filter.includeSummaries.length > 0) {
       pills.push(
-        `<span class="filter-pill filter-pill-include">${filter.includeSummaries.length} included</span>`
+        `<span class="filter-pill filter-pill-include"><span uk-icon="icon: plus; ratio: 0.65" class="uk-margin-xsmall-right"></span>${filter.includeSummaries.length} included</span>`
       );
     }
     filterTd.innerHTML = pills.length
       ? pills.join(' ')
-      : `<span class="uk-text-muted uk-text-small">Default filters</span>`;
+      : `<span class="filter-pill filter-pill-default">Default filters</span>`;
     tr.appendChild(filterTd);
 
     // 5. Events count
     const countTd = document.createElement('td');
     countTd.className = 'cal-cell-count uk-text-center';
     countTd.setAttribute('data-label', 'Events');
-    countTd.innerHTML = `<span class="uk-badge cal-count-badge">${cal.eventsCount || 0}</span>`;
+    const countVal = cal.eventsCount || 0;
+    const countClass = countVal > 0 ? 'cal-count-badge cal-count-active' : 'cal-count-badge cal-count-zero';
+    countTd.innerHTML = `<span class="${countClass}">${countVal}</span>`;
     tr.appendChild(countTd);
 
     // 6. Actions (Edit & Delete)

@@ -364,6 +364,21 @@ body {
   border-color: #2563eb;
 }
 
+.view-tabs .uk-badge {
+  background: #2563eb !important;
+  color: #ffffff !important;
+  font-size: 0.78rem !important;
+  font-weight: 700 !important;
+  padding: 1px 8px !important;
+  border-radius: 9999px !important;
+  min-width: 22px;
+  height: 20px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 1px 2px rgba(37, 99, 235, 0.2);
+}
+
 .btn-action-primary {
   background: #2563eb !important;
   color: #ffffff !important;
@@ -381,16 +396,18 @@ body {
 .cal-name-text {
   font-weight: 600;
   color: #0f172a;
-  font-size: 0.95rem;
+  font-size: 1rem;
 }
 
 .cal-url-code {
   font-family: 'Roboto Mono', monospace, sans-serif;
-  font-size: 0.75rem;
-  color: #475569;
+  font-size: 0.8rem;
+  font-weight: 500;
+  color: #1e293b;
   background: #f1f5f9;
-  padding: 2px 6px;
-  border-radius: 4px;
+  border: 1px solid #cbd5e1;
+  padding: 3px 8px;
+  border-radius: 6px;
   display: inline-block;
   max-width: 280px;
   overflow: hidden;
@@ -399,34 +416,125 @@ body {
   vertical-align: middle;
 }
 
+/* ID Strategy / Hash Method Tag */
+.cal-strat-badge {
+  display: inline-flex;
+  align-items: center;
+  font-size: 0.78rem;
+  font-weight: 600;
+  line-height: 1.3;
+  padding: 3px 9px;
+  border-radius: 6px;
+  letter-spacing: 0.01em;
+}
+
+.cal-strat-time-summary {
+  background: #ede9fe;
+  color: #5b21b6;
+  border: 1px solid #c4b5fd;
+}
+
+.cal-strat-standard {
+  background: #f1f5f9;
+  color: #334155;
+  border: 1px solid #cbd5e1;
+}
+
+/* Events Count Badge */
+.cal-count-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.875rem;
+  font-weight: 700;
+  min-width: 32px;
+  height: 24px;
+  padding: 0 9px;
+  border-radius: 9999px;
+  font-feature-settings: 'tnum';
+  font-variant-numeric: tabular-nums;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+}
+
+.cal-count-active {
+  background: #dbeafe;
+  color: #1d4ed8;
+  border: 1px solid #93c5fd;
+}
+
+.cal-count-zero {
+  background: #f1f5f9;
+  color: #64748b;
+  border: 1px solid #e2e8f0;
+}
+
+/* Target Google Calendar Badge */
+.cal-gcal-badge {
+  display: inline-flex;
+  align-items: center;
+  font-family: 'Roboto Mono', monospace, sans-serif;
+  font-size: 0.78rem;
+  font-weight: 600;
+  background-color: #f3e8ff;
+  color: #7e22ce;
+  border: 1px solid #d8b4fe;
+  padding: 3px 8px;
+  border-radius: 6px;
+}
+
+.cal-local-badge {
+  display: inline-flex;
+  align-items: center;
+  font-size: 0.78rem;
+  font-weight: 500;
+  color: #64748b;
+  background: #f1f5f9;
+  border: 1px solid #e2e8f0;
+  padding: 3px 8px;
+  border-radius: 6px;
+}
+
+/* Active Filter Pills */
 .filter-pill {
   display: inline-flex;
   align-items: center;
-  font-size: 0.75rem;
-  background: #f8fafc;
-  color: #475569;
-  border: 1px solid #e2e8f0;
-  padding: 2px 8px;
-  border-radius: 12px;
-  margin: 2px;
-}
-
-.filter-pill-exclude {
-  background: #fff1f2;
-  color: #9f1239;
-  border-color: #ffe4e6;
-}
-
-.filter-pill-include {
-  background: #f0fdf4;
-  color: #166534;
-  border-color: #dcfce7;
+  font-size: 0.78rem;
+  font-weight: 600;
+  padding: 3px 9px;
+  border-radius: 6px;
+  margin: 2px 3px 2px 0;
+  line-height: 1.3;
 }
 
 .filter-pill-window {
   background: #eff6ff;
-  color: #1e40af;
-  border-color: #dbeafe;
+  color: #1d4ed8;
+  border: 1px solid #bfdbfe;
+}
+
+.filter-pill-cancelled {
+  background: #f1f5f9;
+  color: #334155;
+  border: 1px solid #cbd5e1;
+}
+
+.filter-pill-exclude {
+  background: #fff1f2;
+  color: #be123c;
+  border: 1px solid #fecdd3;
+}
+
+.filter-pill-include {
+  background: #f0fdf4;
+  color: #15803d;
+  border: 1px solid #bbf7d0;
+}
+
+.filter-pill-default {
+  background: #f8fafc;
+  color: #64748b;
+  border: 1px solid #e2e8f0;
+  font-weight: 500;
 }
 
 .modal-custom-body {
@@ -438,22 +546,6 @@ body {
   font-family: 'Roboto Mono', monospace, sans-serif;
   font-size: 0.8rem !important;
   line-height: 1.4;
-}
-
-/* Calendar UI Badges & Buttons */
-.cal-strat-badge {
-  background: #f1f5f9;
-  color: #475569;
-  font-size: 0.7rem;
-  font-weight: 500;
-  border: 1px solid #e2e8f0;
-}
-
-.cal-count-badge {
-  background: #e2e8f0;
-  color: #1e293b;
-  font-size: 0.75rem;
-  font-weight: 600;
 }
 
 .btn-cal-action {
