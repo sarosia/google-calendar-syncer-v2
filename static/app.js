@@ -1,13 +1,109 @@
 import e from './e.js';
 
-function formatEventDateTime(startTime, endTime) {
-  const start = new Date(startTime);
-  const end = new Date(endTime);
-  const date = start.toLocaleDateString(undefined, {
+function formatDate(d, includeYear = false) {
+  const options = {
     weekday: 'short',
     month: 'short',
     day: 'numeric',
-  });
+  };
+  if (includeYear) {
+    options.year = 'numeric';
+  }
+  return d.toLocaleDateString(undefined, options);
+}
+
+function parseDateOnly(str) {
+  if (!str || typeof str !== 'string') return null;
+  const parts = str.split('-').map(Number);
+  if (parts.length === 3 && !parts.some(isNaN)) {
+    return new Date(parts[0], parts[1] - 1, parts[2]);
+  }
+  return null;
+}
+
+function formatEventDateTime(eventOrStart, endTimeParam, isAllDayParam) {
+  let startTime;
+  let endTime;
+  let isAllDay;
+  let startDateStr;
+  let endDateStr;
+
+  if (
+    typeof eventOrStart === 'object' &&
+    eventOrStart !== null &&
+    !(eventOrStart instanceof Date)
+  ) {
+    startTime = eventOrStart.startTime;
+    endTime = eventOrStart.endTime;
+    isAllDay = eventOrStart.isAllDay;
+    startDateStr = eventOrStart.startDate;
+    endDateStr = eventOrStart.endDate;
+  } else {
+    startTime = eventOrStart;
+    endTime = endTimeParam;
+    isAllDay = isAllDayParam;
+  }
+
+  // Handle all-day with explicit YYYY-MM-DD to avoid timezone shifts
+  if (isAllDay && startDateStr) {
+    const start = parseDateOnly(startDateStr);
+    const end = parseDateOnly(endDateStr) || start;
+    let inclusiveEnd = end;
+    if (end.getTime() > start.getTime()) {
+      inclusiveEnd = new Date(
+        end.getFullYear(),
+        end.getMonth(),
+        end.getDate() - 1
+      );
+    }
+    const sameDay =
+      start.getFullYear() === inclusiveEnd.getFullYear() &&
+      start.getMonth() === inclusiveEnd.getMonth() &&
+      start.getDate() === inclusiveEnd.getDate();
+
+    if (sameDay) {
+      return formatDate(start);
+    }
+    const diffYears = start.getFullYear() !== inclusiveEnd.getFullYear();
+    return `${formatDate(start, diffYears)} - ${formatDate(inclusiveEnd, diffYears)}`;
+  }
+
+  const start = new Date(startTime);
+  const end = new Date(endTime);
+
+  const startMidnight =
+    start.getHours() === 0 &&
+    start.getMinutes() === 0 &&
+    start.getSeconds() === 0;
+  const endMidnight =
+    end.getHours() === 0 &&
+    end.getMinutes() === 0 &&
+    end.getSeconds() === 0;
+
+  const allDay =
+    Boolean(isAllDay) ||
+    (startMidnight && (endMidnight || end.getTime() === start.getTime()));
+
+  if (allDay) {
+    let inclusiveEnd = new Date(end);
+    if (end.getTime() > start.getTime()) {
+      inclusiveEnd = new Date(end.getTime() - 1000);
+    }
+
+    const sameDay =
+      start.getFullYear() === inclusiveEnd.getFullYear() &&
+      start.getMonth() === inclusiveEnd.getMonth() &&
+      start.getDate() === inclusiveEnd.getDate();
+
+    if (sameDay) {
+      return formatDate(start);
+    }
+    const diffYears = start.getFullYear() !== inclusiveEnd.getFullYear();
+    return `${formatDate(start, diffYears)} - ${formatDate(inclusiveEnd, diffYears)}`;
+  }
+
+  // Regular timed event
+  const date = formatDate(start);
   const startStr = start.toLocaleTimeString([], {
     hour: '2-digit',
     minute: '2-digit',
@@ -17,7 +113,16 @@ function formatEventDateTime(startTime, endTime) {
     minute: '2-digit',
   });
 
-  return `${date}, ${startStr} - ${endStr}`;
+  const sameDay =
+    start.getFullYear() === end.getFullYear() &&
+    start.getMonth() === end.getMonth() &&
+    start.getDate() === end.getDate();
+
+  if (sameDay) {
+    return `${date}, ${startStr} - ${endStr}`;
+  }
+  const endDate = formatDate(end);
+  return `${date}, ${startStr} - ${endDate}, ${endStr}`;
 }
 
 function getSourceClass(sourceName) {
@@ -275,7 +380,7 @@ function renderEvents(events) {
     const description = event.description || '';
     const location = event.location || '-';
     const sourceName = event.sourceName || 'Default';
-    const timeFormatted = formatEventDateTime(event.startTime, event.endTime);
+    const timeFormatted = formatEventDateTime(event);
     const hasLocation = location && location !== '-';
 
     let syncMarker;

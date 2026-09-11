@@ -269,4 +269,70 @@ describe('Event', () => {
       expect(ev.toJson().rawSummary).to.equal(input);
     }
   });
+
+  it('correctly identifies and formats all-day events', () => {
+    const rawAllDay = {
+      datetype: 'date',
+      start: new Date(2026, 8, 9), // Sep 9, 2026
+      end: new Date(2026, 8, 12), // Sep 12, 2026
+    };
+    const allDayEvent = new Event(
+      'allday-1',
+      new DateTime('2026-09-09T00:00:00.000Z'),
+      new DateTime('2026-09-12T00:00:00.000Z'),
+      'School Holiday',
+      '',
+      '',
+      'CONFIRMED',
+      rawAllDay
+    );
+
+    expect(allDayEvent.isAllDay()).to.be.true;
+    expect(allDayEvent.getStartDate()).to.equal('2026-09-09');
+    expect(allDayEvent.getEndDate()).to.equal('2026-09-12');
+
+    const json = allDayEvent.toJson();
+    expect(json.isAllDay).to.be.true;
+    expect(json.startDate).to.equal('2026-09-09');
+    expect(json.endDate).to.equal('2026-09-12');
+
+    // Single day all-day event without explicit end date
+    const singleDayRaw = {
+      start: {
+        dateOnly: true,
+        getFullYear: () => 2026,
+        getMonth: () => 8,
+        getDate: () => 9,
+      },
+    };
+    const singleDayEvent = new Event(
+      'allday-2',
+      new DateTime('2026-09-09T00:00:00.000Z'),
+      new DateTime('2026-09-09T00:00:00.000Z'),
+      'Single Day Off',
+      '',
+      '',
+      'CONFIRMED',
+      singleDayRaw
+    );
+
+    expect(singleDayEvent.isAllDay()).to.be.true;
+    expect(singleDayEvent.getStartDate()).to.equal('2026-09-09');
+    expect(singleDayEvent.getEndDate()).to.equal('2026-09-09');
+  });
+
+  it('defaults isAllDay to false for timed events', () => {
+    const timedEvent = new Event(
+      'timed-1',
+      startTime,
+      endTime,
+      'Regular Meeting'
+    );
+    expect(timedEvent.isAllDay()).to.be.false;
+    expect(timedEvent.getStartDate()).to.be.null;
+    expect(timedEvent.getEndDate()).to.be.null;
+    expect(timedEvent.toJson().isAllDay).to.be.false;
+    expect(timedEvent.toJson().startDate).to.be.null;
+    expect(timedEvent.toJson().endDate).to.be.null;
+  });
 });
