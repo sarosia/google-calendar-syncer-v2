@@ -32,6 +32,63 @@ function getSourceClass(sourceName) {
   return 'source-tag source-tag-default';
 }
 
+function escapeHtml(str) {
+  if (!str) return '';
+  return String(str)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#039;');
+}
+
+function formatTextWithLinks(text) {
+  if (!text) return '';
+  const urlRegex = /(https?:\/\/[^\s<>"|]+)/g;
+  let lastIndex = 0;
+  let html = '';
+  let match;
+
+  while ((match = urlRegex.exec(text)) !== null) {
+    const before = text.slice(lastIndex, match.index);
+    html += escapeHtml(before);
+
+    let rawUrl = match[0];
+    let trailing = '';
+    while (rawUrl.length > 0 && /[,.:;!?)]$/.test(rawUrl)) {
+      trailing = rawUrl.slice(-1) + trailing;
+      rawUrl = rawUrl.slice(0, -1);
+    }
+    if (rawUrl.endsWith("'") && !rawUrl.includes("'/'")) {
+      trailing = "'" + trailing;
+      rawUrl = rawUrl.slice(0, -1);
+    }
+
+    let display = rawUrl;
+    try {
+      if (rawUrl.length > 35) {
+        const u = new URL(rawUrl);
+        display = `${u.origin}/...`;
+      }
+    } catch {
+      if (rawUrl.length > 35) {
+        display = `${rawUrl.slice(0, 32)}...`;
+      }
+    }
+
+    html += `<a href="${escapeHtml(rawUrl)}" target="_blank" rel="noopener noreferrer" class="event-link" title="${escapeHtml(rawUrl)}">${escapeHtml(display)}</a>`;
+    html += escapeHtml(trailing);
+
+    lastIndex = match.index + match[0].length;
+  }
+
+  if (lastIndex < text.length) {
+    html += escapeHtml(text.slice(lastIndex));
+  }
+
+  return html;
+}
+
 let allEvents = [];
 let debounceTimer = null;
 
@@ -168,7 +225,11 @@ function renderEvents(events) {
       ['div', { class: 'event-title' }, name],
     ];
     if (description) {
-      eventDetails.push(['div', { class: 'event-desc' }, description]);
+      eventDetails.push([
+        'div',
+        { class: 'event-desc' },
+        formatTextWithLinks(description),
+      ]);
     }
     eventDetails.push(['div', { class: 'event-debug-meta' }, debugBadges]);
 
@@ -180,7 +241,7 @@ function renderEvents(events) {
     const locDisplay = hasLocation
       ? [
           ['span', { class: 'loc-pin-icon' }, '📍 '],
-          ['span', {}, location],
+          ['span', {}, formatTextWithLinks(location)],
         ]
       : location;
 
@@ -328,16 +389,6 @@ async function loadCurrentUser() {
 
 let allCalendars = [];
 
-function escapeHtml(str) {
-  if (!str) return '';
-  return String(str)
-    .replace(/&/g, '&amp;')
-    .replace(/</g, '&lt;')
-    .replace(/>/g, '&gt;')
-    .replace(/"/g, '&quot;')
-    .replace(/'/g, '&#039;');
-}
-
 async function loadEvents() {
   try {
     const [eventsRes, sourcesRes] = await Promise.all([
@@ -481,10 +532,15 @@ function renderCalendars(calendars) {
     gcalTd.className = 'cal-cell-gcal';
     gcalTd.setAttribute('data-label', 'Target GCal');
     if (cal.targetCalendarId) {
+      const displayName =
+        cal.targetCalendarName ||
+        (cal.targetCalendarId.length > 20
+          ? cal.targetCalendarId.slice(0, 16) + '…'
+          : cal.targetCalendarId);
       gcalTd.innerHTML = `
-        <span class="cal-gcal-badge" title="${escapeHtml(cal.targetCalendarId)}">
+        <span class="cal-gcal-badge" title="ID: ${escapeHtml(cal.targetCalendarId)}">
           <span uk-icon="icon: google; ratio: 0.75" class="uk-margin-xsmall-right"></span>
-          ${escapeHtml(cal.targetCalendarId.slice(0, 16))}…
+          ${escapeHtml(displayName)}
         </span>
       `;
     } else {
@@ -570,6 +626,12 @@ function openAddCalendarModal() {
   e('cal-exclude-summaries').value = '';
   e('cal-include-summaries').value = '';
 
+  const hint = e('cal-target-id-hint');
+  if (hint) {
+    hint.textContent =
+      'Leave empty for local viewing only without syncing to Google Calendar.';
+  }
+
   if (window.UIkit && window.UIkit.modal) {
     UIkit.modal('#modal-calendar').show();
   }
@@ -589,6 +651,16 @@ function openEditCalendarModal(cal) {
   e('cal-exclude-cancelled').checked = filter.excludeCancelled !== false;
   e('cal-exclude-summaries').value = (filter.excludeSummaries || []).join('\n');
   e('cal-include-summaries').value = (filter.includeSummaries || []).join('\n');
+
+  const hint = e('cal-target-id-hint');
+  if (hint) {
+    if (cal.targetCalendarName) {
+      hint.innerHTML = `Target calendar: <strong style="color: #7e22ce;">${escapeHtml(cal.targetCalendarName)}</strong>`;
+    } else {
+      hint.textContent =
+        'Leave empty for local viewing only without syncing to Google Calendar.';
+    }
+  }
 
   if (window.UIkit && window.UIkit.modal) {
     UIkit.modal('#modal-calendar').show();

@@ -185,4 +185,45 @@ describe('GCalSyncer', () => {
     expect(event1.isDeleted()).to.be.true;
     expect(event1.toJson().isDeleted).to.be.true;
   });
+
+  describe('getCalendarSummary', () => {
+    it('returns null if calendarId is invalid', async () => {
+      const syncer = new GCalSyncer();
+      expect(await syncer.getCalendarSummary(null)).to.be.null;
+      expect(await syncer.getCalendarSummary('')).to.be.null;
+    });
+
+    it('fetches summary from google calendar client and caches result', async () => {
+      let callCount = 0;
+      const mockCalendar = {
+        calendars: {
+          get: async ({ calendarId }) => {
+            callCount++;
+            return { data: { summary: `Summary for ${calendarId}` } };
+          },
+        },
+      };
+      const syncer = new GCalSyncer({ calendar: mockCalendar });
+      const summary1 = await syncer.getCalendarSummary('cal-1');
+      expect(summary1).to.equal('Summary for cal-1');
+      expect(callCount).to.equal(1);
+
+      // Second call should hit cache without calling API again
+      const summary2 = await syncer.getCalendarSummary('cal-1');
+      expect(summary2).to.equal('Summary for cal-1');
+      expect(callCount).to.equal(1);
+    });
+
+    it('falls back to calendarId if client returns no summary', async () => {
+      const mockCalendar = {
+        calendars: {
+          get: async () => ({ data: {} }),
+        },
+      };
+      const syncer = new GCalSyncer({ calendar: mockCalendar });
+      expect(await syncer.getCalendarSummary('cal-fallback')).to.equal(
+        'cal-fallback'
+      );
+    });
+  });
 });

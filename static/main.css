@@ -252,6 +252,20 @@ body {
   color: #475569;
 }
 
+.event-link {
+  color: #0284c7;
+  text-decoration: underline;
+  text-underline-offset: 2px;
+  word-break: break-all;
+  font-weight: 500;
+  transition: color 0.15s ease;
+}
+
+.event-link:hover {
+  color: #0369a1;
+  text-decoration: underline;
+}
+
 .event-debug-meta {
   margin-top: 6px;
   display: flex;
