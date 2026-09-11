@@ -42,6 +42,21 @@ function escapeHtml(str) {
     .replace(/'/g, '&#039;');
 }
 
+function shortenUrlText(rawUrl, maxLength = 35) {
+  try {
+    const urlObj = new URL(rawUrl);
+    if (rawUrl.length <= maxLength) {
+      return rawUrl;
+    }
+    return `${urlObj.origin}/...`;
+  } catch {
+    if (rawUrl.length > maxLength) {
+      return `${rawUrl.slice(0, maxLength - 3)}...`;
+    }
+    return rawUrl;
+  }
+}
+
 function formatTextWithLinks(text) {
   if (!text) return '';
   const urlRegex = /(https?:\/\/[^\s<>"|]+)/g;
@@ -64,18 +79,7 @@ function formatTextWithLinks(text) {
       rawUrl = rawUrl.slice(0, -1);
     }
 
-    let display = rawUrl;
-    try {
-      if (rawUrl.length > 35) {
-        const u = new URL(rawUrl);
-        display = `${u.origin}/...`;
-      }
-    } catch {
-      if (rawUrl.length > 35) {
-        display = `${rawUrl.slice(0, 32)}...`;
-      }
-    }
-
+    const display = shortenUrlText(rawUrl);
     html += `<a href="${escapeHtml(rawUrl)}" target="_blank" rel="noopener noreferrer" class="event-link" title="${escapeHtml(rawUrl)}">${escapeHtml(display)}</a>`;
     html += escapeHtml(trailing);
 
@@ -87,6 +91,148 @@ function formatTextWithLinks(text) {
   }
 
   return html;
+}
+
+function linkifyTextNodes(doc, root) {
+  const walker = doc.createTreeWalker(root, NodeFilter.SHOW_TEXT, {
+    acceptNode(node) {
+      if (
+        node.parentElement &&
+        (node.parentElement.closest('a') ||
+          node.parentElement.tagName === 'SCRIPT' ||
+          node.parentElement.tagName === 'STYLE')
+      ) {
+        return NodeFilter.FILTER_REJECT;
+      }
+      return NodeFilter.FILTER_ACCEPT;
+    },
+  });
+
+  const textNodes = [];
+  while (walker.nextNode()) {
+    textNodes.push(walker.currentNode);
+  }
+
+  const urlRegex = /(https?:\/\/[^\s<>"|]+)/g;
+
+  for (const node of textNodes) {
+    const text = node.nodeValue;
+    if (!text || !urlRegex.test(text)) continue;
+    urlRegex.lastIndex = 0;
+
+    const fragment = doc.createDocumentFragment();
+    let lastIdx = 0;
+    let match;
+
+    while ((match = urlRegex.exec(text)) !== null) {
+      if (match.index > lastIdx) {
+        fragment.appendChild(
+          doc.createTextNode(text.slice(lastIdx, match.index))
+        );
+      }
+
+      let rawUrl = match[0];
+      let trailing = '';
+      while (rawUrl.length > 0 && /[,.:;!?)]$/.test(rawUrl)) {
+        trailing = rawUrl.slice(-1) + trailing;
+        rawUrl = rawUrl.slice(0, -1);
+      }
+      if (rawUrl.endsWith("'") && !rawUrl.includes("'/'")) {
+        trailing = "'" + trailing;
+        rawUrl = rawUrl.slice(0, -1);
+      }
+
+      const a = doc.createElement('a');
+      a.href = rawUrl;
+      a.target = '_blank';
+      a.rel = 'noopener noreferrer';
+      a.className = 'event-link';
+      a.title = rawUrl;
+      a.textContent = shortenUrlText(rawUrl);
+
+      fragment.appendChild(a);
+      if (trailing) {
+        fragment.appendChild(doc.createTextNode(trailing));
+      }
+
+      lastIdx = match.index + match[0].length;
+    }
+
+    if (lastIdx < text.length) {
+      fragment.appendChild(doc.createTextNode(text.slice(lastIdx)));
+    }
+
+    if (node.parentNode) {
+      node.parentNode.replaceChild(fragment, node);
+    }
+  }
+}
+
+function formatContentWithLinks(rawContent) {
+  if (!rawContent) return '';
+
+  const hasHtml = /<[a-z][\s\S]*>/i.test(rawContent);
+
+  if (hasHtml && typeof DOMParser !== 'undefined') {
+    try {
+      const parser = new DOMParser();
+      // Normalize line breaks & collapse 3+ consecutive line breaks
+      const sanitizedInput = rawContent
+        .replace(/<br\s*\/?>\s*[\r\n]+/gi, '<br>')
+        .replace(/(?:<br\s*\/?>\s*){3,}/gi, '<br><br>');
+      const doc = parser.parseFromString(sanitizedInput, 'text/html');
+
+      // 1. Remove dangerous script/style/iframe tags
+      const unsafe = doc.body.querySelectorAll(
+        'script, style, iframe, frame, object, embed, applet, meta, link, base'
+      );
+      unsafe.forEach((el) => el.remove());
+
+      // 2. Remove dangerous event handlers and protocols
+      const allElements = doc.body.querySelectorAll('*');
+      for (const el of allElements) {
+        for (const attr of Array.from(el.attributes)) {
+          const name = attr.name.toLowerCase();
+          const val = attr.value.toLowerCase().trim();
+          if (
+            name.startsWith('on') ||
+            val.startsWith('javascript:') ||
+            val.startsWith('data:')
+          ) {
+            el.removeAttribute(attr.name);
+          }
+        }
+      }
+
+      // 3. Process existing <a> tags: format & shorten link text
+      const anchors = doc.body.querySelectorAll('a');
+      for (const a of anchors) {
+        a.setAttribute('target', '_blank');
+        a.setAttribute('rel', 'noopener noreferrer');
+        a.classList.add('event-link');
+        const href = a.getAttribute('href') || '';
+        if (href) {
+          a.setAttribute('title', href);
+        }
+        // If anchor text contains or is a URL, shorten it
+        const text = a.textContent.trim();
+        if (/^https?:\/\//i.test(text) && text.length > 35) {
+          a.textContent = shortenUrlText(text);
+        }
+      }
+
+      // 4. Linkify any unlinked URLs in text nodes
+      linkifyTextNodes(doc, doc.body);
+
+      return doc.body.innerHTML;
+    } catch (e) {
+      console.warn('DOMParser error, falling back to text formatter:', e);
+      return formatTextWithLinks(rawContent);
+    }
+  }
+
+  // Pure plain text
+  return formatTextWithLinks(rawContent);
 }
 
 let allEvents = [];
@@ -228,7 +374,7 @@ function renderEvents(events) {
       eventDetails.push([
         'div',
         { class: 'event-desc' },
-        formatTextWithLinks(description),
+        formatContentWithLinks(description),
       ]);
     }
     eventDetails.push(['div', { class: 'event-debug-meta' }, debugBadges]);
@@ -241,7 +387,7 @@ function renderEvents(events) {
     const locDisplay = hasLocation
       ? [
           ['span', { class: 'loc-pin-icon' }, '📍 '],
-          ['span', {}, formatTextWithLinks(location)],
+          ['span', {}, formatContentWithLinks(location)],
         ]
       : location;
 
