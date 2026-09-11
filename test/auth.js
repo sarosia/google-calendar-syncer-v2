@@ -10,9 +10,20 @@ describe('AuthManager', () => {
 
   describe('Configuration & Whitelist', () => {
     it('initializes with default options and allowed emails', () => {
-      const auth = new AuthManager({}, dummyLogger);
+      const unconfigured = new AuthManager({}, dummyLogger);
+      expect(unconfigured.isEnabled()).to.be.false;
+      expect(unconfigured.getAllowedEmails()).to.deep.equal([]);
+
+      const auth = new AuthManager(
+        {
+          auth: {
+            clientId: 'test-client-id',
+            clientSecret: 'test-client-secret',
+          },
+        },
+        dummyLogger
+      );
       expect(auth.isEnabled()).to.be.true;
-      expect(auth.getAllowedEmails()).to.deep.equal([]);
     });
 
     it('respects configured allowed emails with case normalization', () => {
@@ -190,6 +201,8 @@ describe('AuthManager', () => {
     const auth = new AuthManager(
       {
         auth: {
+          clientId: 'test-client-id',
+          clientSecret: 'test-client-secret',
           sessionSecret: 'middleware-test-secret',
           allowedEmails: ['tochiming@gmail.com'],
         },

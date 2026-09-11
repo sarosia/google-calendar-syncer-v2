@@ -17,6 +17,8 @@ describe('App Routes and Authentication Middleware Integration', () => {
     authManager = new AuthManager({
       auth: {
         enabled: true,
+        clientId: 'route-test-client-id',
+        clientSecret: 'route-test-client-secret',
         sessionSecret: 'route-test-secret',
         allowedEmails: ['tochiming@gmail.com'],
       },
@@ -112,11 +114,17 @@ describe('App Routes and Authentication Middleware Integration', () => {
   });
 
   it('redirects /auth/login to /login with error when google credentials not set', async () => {
-    const res = await axios.get(`${baseUrl}/auth/login`, {
-      maxRedirects: 0,
-      validateStatus: (status) => status === 302,
-    });
-    expect(res.headers.location).to.include('/login?error=auth_failed');
+    const orig = authManager.hasGoogleCredentials;
+    authManager.hasGoogleCredentials = () => false;
+    try {
+      const res = await axios.get(`${baseUrl}/auth/login`, {
+        maxRedirects: 0,
+        validateStatus: (status) => status === 302,
+      });
+      expect(res.headers.location).to.include('/login?error=auth_failed');
+    } finally {
+      authManager.hasGoogleCredentials = orig;
+    }
   });
 
   it('returns 401 for unauthenticated API request to /events', async () => {
