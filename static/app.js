@@ -1,129 +1,13 @@
 import e from './e.js';
-
-function formatDate(d, includeYear = false) {
-  const options = {
-    weekday: 'short',
-    month: 'short',
-    day: 'numeric',
-  };
-  if (includeYear) {
-    options.year = 'numeric';
-  }
-  return d.toLocaleDateString(undefined, options);
-}
-
-function parseDateOnly(str) {
-  if (!str || typeof str !== 'string') return null;
-  const parts = str.split('-').map(Number);
-  if (parts.length === 3 && !parts.some(isNaN)) {
-    return new Date(parts[0], parts[1] - 1, parts[2]);
-  }
-  return null;
-}
-
-function formatEventDateTime(eventOrStart, endTimeParam, isAllDayParam) {
-  let startTime;
-  let endTime;
-  let isAllDay;
-  let startDateStr;
-  let endDateStr;
-
-  if (
-    typeof eventOrStart === 'object' &&
-    eventOrStart !== null &&
-    !(eventOrStart instanceof Date)
-  ) {
-    startTime = eventOrStart.startTime;
-    endTime = eventOrStart.endTime;
-    isAllDay = eventOrStart.isAllDay;
-    startDateStr = eventOrStart.startDate;
-    endDateStr = eventOrStart.endDate;
-  } else {
-    startTime = eventOrStart;
-    endTime = endTimeParam;
-    isAllDay = isAllDayParam;
-  }
-
-  // Handle all-day with explicit YYYY-MM-DD to avoid timezone shifts
-  if (isAllDay && startDateStr) {
-    const start = parseDateOnly(startDateStr);
-    const end = parseDateOnly(endDateStr) || start;
-    let inclusiveEnd = end;
-    if (end.getTime() > start.getTime()) {
-      inclusiveEnd = new Date(
-        end.getFullYear(),
-        end.getMonth(),
-        end.getDate() - 1
-      );
-    }
-    const sameDay =
-      start.getFullYear() === inclusiveEnd.getFullYear() &&
-      start.getMonth() === inclusiveEnd.getMonth() &&
-      start.getDate() === inclusiveEnd.getDate();
-
-    if (sameDay) {
-      return formatDate(start);
-    }
-    const diffYears = start.getFullYear() !== inclusiveEnd.getFullYear();
-    return `${formatDate(start, diffYears)} - ${formatDate(inclusiveEnd, diffYears)}`;
-  }
-
-  const start = new Date(startTime);
-  const end = new Date(endTime);
-
-  const startMidnight =
-    start.getHours() === 0 &&
-    start.getMinutes() === 0 &&
-    start.getSeconds() === 0;
-  const endMidnight =
-    end.getHours() === 0 &&
-    end.getMinutes() === 0 &&
-    end.getSeconds() === 0;
-
-  const allDay =
-    Boolean(isAllDay) ||
-    (startMidnight && (endMidnight || end.getTime() === start.getTime()));
-
-  if (allDay) {
-    let inclusiveEnd = new Date(end);
-    if (end.getTime() > start.getTime()) {
-      inclusiveEnd = new Date(end.getTime() - 1000);
-    }
-
-    const sameDay =
-      start.getFullYear() === inclusiveEnd.getFullYear() &&
-      start.getMonth() === inclusiveEnd.getMonth() &&
-      start.getDate() === inclusiveEnd.getDate();
-
-    if (sameDay) {
-      return formatDate(start);
-    }
-    const diffYears = start.getFullYear() !== inclusiveEnd.getFullYear();
-    return `${formatDate(start, diffYears)} - ${formatDate(inclusiveEnd, diffYears)}`;
-  }
-
-  // Regular timed event
-  const date = formatDate(start);
-  const startStr = start.toLocaleTimeString([], {
-    hour: '2-digit',
-    minute: '2-digit',
-  });
-  const endStr = end.toLocaleTimeString([], {
-    hour: '2-digit',
-    minute: '2-digit',
-  });
-
-  const sameDay =
-    start.getFullYear() === end.getFullYear() &&
-    start.getMonth() === end.getMonth() &&
-    start.getDate() === end.getDate();
-
-  if (sameDay) {
-    return `${date}, ${startStr} - ${endStr}`;
-  }
-  const endDate = formatDate(end);
-  return `${date}, ${startStr} - ${endDate}, ${endStr}`;
-}
+import {
+  escapeHtml,
+  formatDate,
+  parseDateOnly,
+  formatEventDateTime,
+  formatTextWithLinks,
+  linkifyTextNodes,
+  shortenUrlText,
+} from './apper-ui.js';
 
 function getSourceClass(sourceName) {
   const lower = (sourceName || '').toLowerCase();
@@ -135,142 +19,6 @@ function getSourceClass(sourceName) {
     return 'source-tag source-tag-school';
   }
   return 'source-tag source-tag-default';
-}
-
-function escapeHtml(str) {
-  if (!str) return '';
-  return String(str)
-    .replace(/&/g, '&amp;')
-    .replace(/</g, '&lt;')
-    .replace(/>/g, '&gt;')
-    .replace(/"/g, '&quot;')
-    .replace(/'/g, '&#039;');
-}
-
-function shortenUrlText(rawUrl, maxLength = 35) {
-  try {
-    const urlObj = new URL(rawUrl);
-    if (rawUrl.length <= maxLength) {
-      return rawUrl;
-    }
-    return `${urlObj.origin}/...`;
-  } catch {
-    if (rawUrl.length > maxLength) {
-      return `${rawUrl.slice(0, maxLength - 3)}...`;
-    }
-    return rawUrl;
-  }
-}
-
-function formatTextWithLinks(text) {
-  if (!text) return '';
-  const urlRegex = /(https?:\/\/[^\s<>"|]+)/g;
-  let lastIndex = 0;
-  let html = '';
-  let match;
-
-  while ((match = urlRegex.exec(text)) !== null) {
-    const before = text.slice(lastIndex, match.index);
-    html += escapeHtml(before);
-
-    let rawUrl = match[0];
-    let trailing = '';
-    while (rawUrl.length > 0 && /[,.:;!?)]$/.test(rawUrl)) {
-      trailing = rawUrl.slice(-1) + trailing;
-      rawUrl = rawUrl.slice(0, -1);
-    }
-    if (rawUrl.endsWith("'") && !rawUrl.includes("'/'")) {
-      trailing = "'" + trailing;
-      rawUrl = rawUrl.slice(0, -1);
-    }
-
-    const display = shortenUrlText(rawUrl);
-    html += `<a href="${escapeHtml(rawUrl)}" target="_blank" rel="noopener noreferrer" class="event-link" title="${escapeHtml(rawUrl)}">${escapeHtml(display)}</a>`;
-    html += escapeHtml(trailing);
-
-    lastIndex = match.index + match[0].length;
-  }
-
-  if (lastIndex < text.length) {
-    html += escapeHtml(text.slice(lastIndex));
-  }
-
-  return html;
-}
-
-function linkifyTextNodes(doc, root) {
-  const walker = doc.createTreeWalker(root, NodeFilter.SHOW_TEXT, {
-    acceptNode(node) {
-      if (
-        node.parentElement &&
-        (node.parentElement.closest('a') ||
-          node.parentElement.tagName === 'SCRIPT' ||
-          node.parentElement.tagName === 'STYLE')
-      ) {
-        return NodeFilter.FILTER_REJECT;
-      }
-      return NodeFilter.FILTER_ACCEPT;
-    },
-  });
-
-  const textNodes = [];
-  while (walker.nextNode()) {
-    textNodes.push(walker.currentNode);
-  }
-
-  const urlRegex = /(https?:\/\/[^\s<>"|]+)/g;
-
-  for (const node of textNodes) {
-    const text = node.nodeValue;
-    if (!text || !urlRegex.test(text)) continue;
-    urlRegex.lastIndex = 0;
-
-    const fragment = doc.createDocumentFragment();
-    let lastIdx = 0;
-    let match;
-
-    while ((match = urlRegex.exec(text)) !== null) {
-      if (match.index > lastIdx) {
-        fragment.appendChild(
-          doc.createTextNode(text.slice(lastIdx, match.index))
-        );
-      }
-
-      let rawUrl = match[0];
-      let trailing = '';
-      while (rawUrl.length > 0 && /[,.:;!?)]$/.test(rawUrl)) {
-        trailing = rawUrl.slice(-1) + trailing;
-        rawUrl = rawUrl.slice(0, -1);
-      }
-      if (rawUrl.endsWith("'") && !rawUrl.includes("'/'")) {
-        trailing = "'" + trailing;
-        rawUrl = rawUrl.slice(0, -1);
-      }
-
-      const a = doc.createElement('a');
-      a.href = rawUrl;
-      a.target = '_blank';
-      a.rel = 'noopener noreferrer';
-      a.className = 'event-link';
-      a.title = rawUrl;
-      a.textContent = shortenUrlText(rawUrl);
-
-      fragment.appendChild(a);
-      if (trailing) {
-        fragment.appendChild(doc.createTextNode(trailing));
-      }
-
-      lastIdx = match.index + match[0].length;
-    }
-
-    if (lastIdx < text.length) {
-      fragment.appendChild(doc.createTextNode(text.slice(lastIdx)));
-    }
-
-    if (node.parentNode) {
-      node.parentNode.replaceChild(fragment, node);
-    }
-  }
 }
 
 function formatContentWithLinks(rawContent) {
@@ -594,50 +342,6 @@ function applyFilter() {
 function debouncedApplyFilter() {
   if (debounceTimer) clearTimeout(debounceTimer);
   debounceTimer = setTimeout(applyFilter, 120);
-}
-
-function renderUserProfile(user) {
-  const container = document.getElementById('user-profile');
-  if (!container) return;
-
-  const displayName = user.name || 'User';
-  const initial = (displayName || 'U').charAt(0).toUpperCase();
-  const avatarHtml = user.picture
-    ? `<img src="${escapeHtml(user.picture)}" alt="Profile" class="user-avatar-img" />`
-    : `<div class="user-avatar-fallback">${escapeHtml(initial)}</div>`;
-
-  container.innerHTML = `
-    <div class="uk-inline">
-      <button class="user-avatar-btn" type="button" aria-label="Account" title="Account">
-        ${avatarHtml}
-      </button>
-      <div uk-dropdown="mode: click; pos: bottom-right; offset: 8" class="user-dropdown-card">
-        <a href="/auth/logout" class="uk-button uk-button-small uk-width-1-1 user-dropdown-logout-btn">
-          <span uk-icon="icon: sign-out; ratio: 0.8" class="uk-margin-small-right"></span>Sign Out
-        </a>
-      </div>
-    </div>
-  `;
-}
-
-async function loadCurrentUser() {
-  try {
-    const res = await fetch('/auth/me');
-    if (res.status === 401) {
-      window.location.href = '/login';
-      return;
-    }
-    if (res.ok) {
-      const data = await res.json();
-      if (data.user) {
-        renderUserProfile(data.user);
-      }
-    }
-  } catch (err) {
-    console.error('Failed to load current user:', err);
-  }
-}
-
 let allCalendars = [];
 
 async function loadEvents() {
@@ -1119,7 +823,6 @@ function init() {
     formCal.onsubmit = submitCalendarForm;
   }
 
-  loadCurrentUser();
   loadEvents();
   loadCalendars();
   setInterval(loadEvents, 30000);
