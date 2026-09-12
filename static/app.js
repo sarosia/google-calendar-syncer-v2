@@ -1,8 +1,6 @@
 import e from './e.js';
 import {
   escapeHtml,
-  formatDate,
-  parseDateOnly,
   formatEventDateTime,
   formatTextWithLinks,
   linkifyTextNodes,
@@ -100,7 +98,10 @@ function renderEvents(events) {
         [
           [
             'td',
-            { colspan: '4', class: 'uk-text-center uk-text-muted uk-padding empty-table-cell' },
+            {
+              colspan: '4',
+              class: 'uk-text-center uk-text-muted uk-padding empty-table-cell',
+            },
             'No upcoming events match the current filter.',
           ],
         ],
@@ -140,10 +141,7 @@ function renderEvents(events) {
           class: 'sync-marker sync-marker-synced',
           title: `Synced to Google Calendar${syncedAtStr}`,
         },
-        [
-          ['span', { class: 'sync-icon' }, '✓'],
-          ' Synced',
-        ],
+        [['span', { class: 'sync-icon' }, '✓'], ' Synced'],
       ];
       statusChip = [
         'span',
@@ -160,10 +158,7 @@ function renderEvents(events) {
           class: 'sync-marker sync-marker-deleted',
           title: 'Deleted in Google Calendar (Tombstone Mode)',
         },
-        [
-          ['span', { class: 'sync-icon' }, '✕'],
-          ' Deleted',
-        ],
+        [['span', { class: 'sync-icon' }, '✕'], ' Deleted'],
       ];
       statusChip = [
         'span',
@@ -180,10 +175,7 @@ function renderEvents(events) {
           class: 'sync-marker sync-marker-unsynced',
           title: 'Local only (not synced to Google Calendar)',
         },
-        [
-          ['span', { class: 'sync-icon' }, '○'],
-          ' Unsynced',
-        ],
+        [['span', { class: 'sync-icon' }, '○'], ' Unsynced'],
       ];
       statusChip = [
         'span',
@@ -220,9 +212,7 @@ function renderEvents(events) {
       ],
     ];
 
-    const eventDetails = [
-      ['div', { class: 'event-title' }, name],
-    ];
+    const eventDetails = [['div', { class: 'event-title' }, name]];
     if (description) {
       eventDetails.push([
         'div',
@@ -233,7 +223,11 @@ function renderEvents(events) {
     eventDetails.push(['div', { class: 'event-debug-meta' }, debugBadges]);
 
     const sourceContent = [
-      ['div', {}, [['span', { class: getSourceClass(sourceName) }, sourceName]]],
+      [
+        'div',
+        {},
+        [['span', { class: getSourceClass(sourceName) }, sourceName]],
+      ],
       ['div', { class: 'uk-margin-xsmall-top' }, [syncMarker]],
     ];
 
@@ -248,9 +242,21 @@ function renderEvents(events) {
       'tr',
       { class: 'event-row' },
       [
-        ['td', { class: 'event-time-cell', 'data-label': 'Time' }, timeFormatted],
-        ['td', { class: 'event-source-cell', 'data-label': 'Source' }, sourceContent],
-        ['td', { class: 'event-title-cell', 'data-label': 'Event' }, eventDetails],
+        [
+          'td',
+          { class: 'event-time-cell', 'data-label': 'Time' },
+          timeFormatted,
+        ],
+        [
+          'td',
+          { class: 'event-source-cell', 'data-label': 'Source' },
+          sourceContent,
+        ],
+        [
+          'td',
+          { class: 'event-title-cell', 'data-label': 'Event' },
+          eventDetails,
+        ],
         [
           'td',
           {
@@ -342,6 +348,8 @@ function applyFilter() {
 function debouncedApplyFilter() {
   if (debounceTimer) clearTimeout(debounceTimer);
   debounceTimer = setTimeout(applyFilter, 120);
+}
+
 let allCalendars = [];
 
 async function loadEvents() {
@@ -457,13 +465,13 @@ function renderCalendars(calendars) {
     const stratIcon = isTimeSummary
       ? '<span uk-icon="icon: bolt; ratio: 0.7" class="uk-margin-xsmall-right"></span>'
       : '<span uk-icon="icon: tag; ratio: 0.7" class="uk-margin-xsmall-right"></span>';
-    const stratLabel = isTimeSummary
-      ? 'Time + Summary UID'
-      : 'Standard UID';
+    const stratLabel = isTimeSummary ? 'Time + Summary UID' : 'Standard UID';
     nameTd.innerHTML = `
       <div class="cal-name-text">${escapeHtml(cal.name)}</div>
       <div class="uk-margin-xsmall-top">
-        <span class="${stratClass}" title="ID Strategy: ${escapeHtml(stratLabel)}">
+        <span class="${stratClass}" title="ID Strategy: ${escapeHtml(
+      stratLabel
+    )}">
           ${stratIcon}${stratLabel}
         </span>
       </div>
@@ -475,7 +483,8 @@ function renderCalendars(calendars) {
     urlTd.className = 'cal-cell-url';
     urlTd.setAttribute('data-label', 'Feed URL');
     const safeUrl = escapeHtml(cal.url);
-    const shortUrl = safeUrl.length > 38 ? safeUrl.slice(0, 35) + '...' : safeUrl;
+    const shortUrl =
+      safeUrl.length > 38 ? safeUrl.slice(0, 35) + '...' : safeUrl;
     urlTd.innerHTML = `
       <span class="cal-url-code" title="${safeUrl}">${shortUrl}</span>
       <a href="${safeUrl}" target="_blank" rel="noopener noreferrer" class="uk-icon-link uk-margin-small-left cal-url-link" uk-icon="icon: link; ratio: 0.8" title="Open / test feed URL"></a>
@@ -493,7 +502,9 @@ function renderCalendars(calendars) {
           ? cal.targetCalendarId.slice(0, 16) + '…'
           : cal.targetCalendarId);
       gcalTd.innerHTML = `
-        <span class="cal-gcal-badge" title="ID: ${escapeHtml(cal.targetCalendarId)}">
+        <span class="cal-gcal-badge" title="ID: ${escapeHtml(
+          cal.targetCalendarId
+        )}">
           <span uk-icon="icon: google; ratio: 0.75" class="uk-margin-xsmall-right"></span>
           ${escapeHtml(displayName)}
         </span>
@@ -511,11 +522,15 @@ function renderCalendars(calendars) {
     const pills = [];
     if (filter.pastWindow || filter.futureWindow) {
       pills.push(
-        `<span class="filter-pill filter-pill-window"><span uk-icon="icon: calendar; ratio: 0.65" class="uk-margin-xsmall-right"></span>${escapeHtml(filter.pastWindow || '7d')} .. ${escapeHtml(filter.futureWindow || '90d')}</span>`
+        `<span class="filter-pill filter-pill-window"><span uk-icon="icon: calendar; ratio: 0.65" class="uk-margin-xsmall-right"></span>${escapeHtml(
+          filter.pastWindow || '7d'
+        )} .. ${escapeHtml(filter.futureWindow || '90d')}</span>`
       );
     }
     if (filter.excludeCancelled !== false) {
-      pills.push(`<span class="filter-pill filter-pill-cancelled"><span uk-icon="icon: check; ratio: 0.65" class="uk-margin-xsmall-right"></span>No cancelled</span>`);
+      pills.push(
+        `<span class="filter-pill filter-pill-cancelled"><span uk-icon="icon: check; ratio: 0.65" class="uk-margin-xsmall-right"></span>No cancelled</span>`
+      );
     }
     if (filter.excludeSummaries && filter.excludeSummaries.length > 0) {
       pills.push(
@@ -537,7 +552,10 @@ function renderCalendars(calendars) {
     countTd.className = 'cal-cell-count uk-text-center';
     countTd.setAttribute('data-label', 'Events');
     const countVal = cal.eventsCount || 0;
-    const countClass = countVal > 0 ? 'cal-count-badge cal-count-active' : 'cal-count-badge cal-count-zero';
+    const countClass =
+      countVal > 0
+        ? 'cal-count-badge cal-count-active'
+        : 'cal-count-badge cal-count-zero';
     countTd.innerHTML = `<span class="${countClass}">${countVal}</span>`;
     tr.appendChild(countTd);
 
@@ -555,8 +573,10 @@ function renderCalendars(calendars) {
     editBtn.onclick = () => openEditCalendarModal(cal);
 
     const deleteBtn = document.createElement('button');
-    deleteBtn.className = 'uk-button uk-button-danger uk-button-small btn-cal-action btn-cal-delete';
-    deleteBtn.innerHTML = '<span uk-icon="icon: trash; ratio: 0.8" class="uk-margin-xsmall-right"></span>Delete';
+    deleteBtn.className =
+      'uk-button uk-button-danger uk-button-small btn-cal-action btn-cal-delete';
+    deleteBtn.innerHTML =
+      '<span uk-icon="icon: trash; ratio: 0.8" class="uk-margin-xsmall-right"></span>Delete';
     deleteBtn.title = 'Remove calendar subscription';
     deleteBtn.onclick = () => deleteCalendar(cal.id, cal.name);
 
@@ -610,7 +630,9 @@ function openEditCalendarModal(cal) {
   const hint = e('cal-target-id-hint');
   if (hint) {
     if (cal.targetCalendarName) {
-      hint.innerHTML = `Target calendar: <strong style="color: #7e22ce;">${escapeHtml(cal.targetCalendarName)}</strong>`;
+      hint.innerHTML = `Target calendar: <strong style="color: #7e22ce;">${escapeHtml(
+        cal.targetCalendarName
+      )}</strong>`;
     } else {
       hint.textContent =
         'Leave empty for local viewing only without syncing to Google Calendar.';
@@ -660,9 +682,7 @@ async function submitCalendarForm(evt) {
   };
 
   try {
-    const endpoint = id
-      ? `/calendars/${encodeURIComponent(id)}`
-      : '/calendars';
+    const endpoint = id ? `/calendars/${encodeURIComponent(id)}` : '/calendars';
     const method = id ? 'PUT' : 'POST';
     const res = await fetch(endpoint, {
       method,
@@ -833,4 +853,3 @@ if (document.readyState === 'loading') {
 } else {
   init();
 }
-
