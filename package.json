@@ -19,7 +19,6 @@
     "@sarosia/once": "^1.0.0",
     "axios": "^1.7.0",
     "express": "^5.2.1",
-    "googleapis": "^107.0.0",
     "node-ical": "^0.18.0"
   }
 }
