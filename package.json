@@ -4,7 +4,8 @@
   "description": "Fetch ICS feeds, filter events, and sync to Google Calendar.",
   "main": "index.js",
   "scripts": {
-    "lint": "eslint lib test",
+    "lint": "apper lint",
+    "lint:fix": "apper lint --fix",
     "start": "node index.js",
     "test": "mocha --reporter spec --bail --check-leaks test/"
   },
@@ -23,14 +24,8 @@
     "uikit": "^3.7.0"
   },
   "devDependencies": {
-    "babel-eslint": "^10.1.0",
     "chai": "^4.3.4",
     "chai-as-promised": "^7.1.1",
-    "eslint": "^7.29.0",
-    "eslint-config-google": "^0.14.0",
-    "eslint-config-prettier": "^8.3.0",
-    "eslint-plugin-prettier": "^4.0.0",
-    "mocha": "^9.0.1",
-    "prettier": "^2.4.1"
+    "mocha": "^9.0.1"
   }
 }
